@@ -297,7 +297,8 @@ function constructHTML(){const q=R.q;
 function rerenderCon(){const c=document.getElementById('con');if(c)c.outerHTML=constructHTML();}
 function takePiece(i){const q=R.q;if(q.done||q.locked)return;const p=q.pieces[i];if(p.used)return;const s=q.slots.indexOf(null);if(s<0)return;
  q.slots[s]=i;p.used=true;q.bad=null;rerenderCon();
- if(!q.slots.includes(null))checkCon();else playPart(R.cat,p.t);}
+ if(!q.slots.includes(null)){q.locked=true;playPart(R.cat,p.t).then(()=>new Promise(r=>setTimeout(r,500))).then(()=>{if(R&&R.q===q){q.locked=false;checkCon();}});}
+ else playPart(R.cat,p.t);}
 function unslot(s){const q=R.q;if(q.done||q.locked)return;const pi=q.slots[s];if(pi==null)return;q.pieces[pi].used=false;q.slots[s]=null;q.bad=null;rerenderCon();}
 function checkCon(){const q=R.q,it=cur();const bad=[];q.slots.forEach((pi,s)=>{if(q.pieces[pi].t!==it.parts[s])bad.push(s);});
  if(!bad.length){q.done=true;q.good=true;rerenderCon();showPic(it);playItem().then(praise).then(()=>setTimeout(()=>{if(R&&R.q===q)nextQ();},350));return;}
