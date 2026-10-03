@@ -116,6 +116,8 @@ main{max-width:960px;margin:0 auto;padding:8px 16px 40px}
 .mi small{font-weight:400;font-size:11px;margin-left:4px;color:#555}
 .sbtn{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;font-size:15px;cursor:pointer;display:inline-block}
 .sbtn.danger{color:var(--bad)}
+.sbtn.on{border-color:var(--acc);background:var(--accbg)}
+.repbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0 8px}.repbar input{font:inherit;padding:6px 8px;border:2px solid var(--line);border-radius:10px;width:80px}
 .rrow{display:grid;grid-template-columns:minmax(80px,1.2fr) minmax(90px,1fr) 110px 44px 44px 44px;gap:6px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin:4px 0}
 .rtxt{font-size:20px;font-weight:700}
 .rrow code{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
@@ -138,6 +140,7 @@ main{max-width:960px;margin:0 auto;padding:8px 16px 40px}
 
 <script>
 const CFG={PIN:'1234',RONDA:8,AUDIO_DIR:'audio/'};
+const ALUNO=(()=>{try{const a=new URLSearchParams(location.search).get('a');if(a&&/^[A-Za-z0-9-]{1,20}$/.test(a))return a;}catch(e){}return '01';})();
 const PREF_KEY='lecomigo-pref';
 let PREF={font:'man',k:1,caixa:'min'};try{Object.assign(PREF,JSON.parse(localStorage.getItem(PREF_KEY))||{});}catch(e){}
 function applyPref(){const h=document.documentElement;h.classList.toggle('fm-man',PREF.font==='man');h.style.setProperty('--k',PREF.k);
@@ -187,10 +190,11 @@ pe:'<svg viewBox="0 0 100 100"><path d="M40 34 Q30 60 34 80 Q38 94 52 92 Q64 90 
 };
 
 /* ---------- dados ---------- */
-const KEY='lecomigo-rodrigo-v1';
+const KEY='lecomigo-a'+ALUNO;
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&Array.isArray(d.attempts))return d;}catch(e){}return{attempts:[],sessions:[],unlocked:{1:true}};}
 let DB=load();
 function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
+function fbSync(){try{if(window.FB&&FB.ready)FB.sync();}catch(e){}}
 
 /* ---------- áudio ---------- */
 let _db;
@@ -284,7 +288,7 @@ function choose(btn,id){const q=R.q;if(q.done||btn.disabled)return;const it=cur(
  else{btn.classList.add('wrong');btn.disabled=true;if(q.first){q.first=false;const w=poolOf(R.cat).find(x=>x.id===id);q.wrong=w?w.txt:id;}
   play('msg-tenta-outra-vez',MSG['msg-tenta-outra-vez']).then(()=>{if(!q.done)playItem();});}}
 function nextQ(){if(!R)return;const it=cur(),q=R.q;
- DB.attempts.push({t:Date.now(),cat:R.cat,mode:R.mode,item:it.id,ok:q.first,ms:Date.now()-q.t,n:q.n,wrong:q.wrong});if(q.first)R.ok++;save();
+ DB.attempts.push({t:Date.now(),cat:R.cat,mode:R.mode,item:it.id,ok:q.first,ms:Date.now()-q.t,n:q.n,wrong:q.wrong});if(q.first)R.ok++;save();fbSync();
  R.i++;if(R.i>=R.items.length)finish();else renderQ(false);}
 function buildConstruct(it){const parts=it.parts,low=parts.map(p=>p.toLowerCase());
  const pool=R.cat==='silabas'?[...VOG,...CON]:R.cat==='palavras'?SYLPOOL:WORDPOOL;
@@ -305,7 +309,7 @@ function checkCon(){const q=R.q,it=cur();const bad=[];q.slots.forEach((pi,s)=>{i
  if(q.first){q.first=false;q.wrong=q.slots.map(pi=>q.pieces[pi].t).join(R.cat==='frases'?' ':'');}
  q.bad=bad;q.locked=true;rerenderCon();
  play('msg-tenta-outra-vez',MSG['msg-tenta-outra-vez']).then(()=>{bad.forEach(s=>{q.pieces[q.slots[s]].used=false;q.slots[s]=null;});q.bad=null;q.locked=false;rerenderCon();playItem();});}
-function finish(){const dur=Date.now()-R.t0;DB.sessions.push({t:Date.now(),cat:R.cat,mode:R.mode,n:R.items.length,ok:R.ok,dur});save();
+function finish(){const dur=Date.now()-R.t0;DB.sessions.push({t:Date.now(),cat:R.cat,mode:R.mode,n:R.items.length,ok:R.ok,dur});save();fbSync();
  const st=R.ok>=7?3:R.ok>=5?2:1;
  main.innerHTML=topBar(R.cat,R.mode)+`<div class="fim"><div class="stars">${'⭐'.repeat(st)}${'<span class="off">⭐</span>'.repeat(3-st)}</div><p class="fim-t">${R.ok} de ${R.items.length} à primeira!</p>
  <div class="row"><button class="bigbtn" onclick="startRound('${R.cat}','${R.mode}')">🔁 Outra vez</button><button class="bigbtn alt" onclick="renderHome()">🏠 Início</button></div></div>`;}
@@ -313,6 +317,14 @@ function finish(){const dur=Date.now()-R.t0;DB.sessions.push({t:Date.now(),cat:R
 /* ---------- área do professor ---------- */
 let pinOk=false,ptabCur='rel';
 function openTeacher(){if(!pinOk){const v=prompt('PIN do professor:');if(v===null)return;if(v!==CFG.PIN){alert('PIN errado.');return;}pinOk=true;}openPanel('rel');}
+let REP={aluno:ALUNO,src:'fb'};
+function repHead(){return `<div class="repbar noprint"><label>Aluno <input id="repAluno" value="${REP.aluno}" size="6" onchange="REP.aluno=this.value.trim()||'01';openPanel('rel')"></label><button class="sbtn ${REP.src==='fb'?'on':''}" onclick="REP.src='fb';openPanel('rel')">☁️ Firebase</button><button class="sbtn ${REP.src==='local'?'on':''}" onclick="REP.src='local';openPanel('rel')">💻 Este aparelho</button></div>`;}
+function drawReport(el,data,srcTxt){const keep=DB;DB=data;try{reportCore(el,srcTxt);}finally{DB=keep;}el.insertAdjacentHTML('afterbegin',repHead());}
+function renderReport(el){
+ if(REP.src==='local'){drawReport(el,REP.aluno===ALUNO?DB:{attempts:[],sessions:[]},'dados deste aparelho');return;}
+ el.innerHTML=repHead()+'<p class="note">A carregar do Firebase…</p>';
+ const go=()=>FB.load(REP.aluno).then(d=>drawReport(el,d,'dados do Firebase (todos os aparelhos)')).catch(e=>{el.innerHTML=repHead()+'<p class="note">Não foi possível ler o Firebase ('+(e&&e.code||e)+'). Mostro os dados deste aparelho.</p>';const d=document.createElement('div');el.appendChild(d);drawReport(d,DB,'dados deste aparelho');});
+ let n=0;(function wait(){if(window.FB&&FB.ready)return go();if(++n>40){el.innerHTML=repHead()+'<p class="note">Sem ligação ao Firebase. Mostro os dados deste aparelho.</p>';const d=document.createElement('div');el.appendChild(d);drawReport(d,DB,'dados deste aparelho');return;}setTimeout(wait,250);})();}
 function openPanel(tab){stopAudio();ptabCur=tab;ovl.hidden=false;
  ovl.innerHTML=`<div class="ph noprint"><div class="ptabs">${[['rel','📊 Relatório'],['grav','🎙️ Gravações']].map(([k,l])=>`<button class="ptab ${k===tab?'on':''}" onclick="openPanel('${k}')">${l}</button>`).join('')}</div><button class="home" onclick="closePanel()">✕ Fechar</button></div><div id="ptab"></div>`;
  const el=document.getElementById('ptab');if(tab==='rel')renderReport(el);else renderStudio(el);}
@@ -328,10 +340,10 @@ function chartSVG(){const A=DB.attempts;const days=[...new Set(A.map(a=>dayKey(a
  CATS.forEach(c=>{const pts=days.map((d,i)=>{const a=A.filter(z=>z.cat===c&&dayKey(z.t)===d);return a.length?[x(i),y(a.filter(z=>z.ok).length/a.length)]:null;}).filter(Boolean);
   if(!pts.length)return;s+=`<polyline fill="none" stroke="${col[c]}" stroke-width="2.5" points="${pts.map(p=>p.join(',')).join(' ')}"/>`+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${col[c]}"/>`).join('');});
  s+='</svg>';s+=`<div class="legend">${CATS.map(c=>`<span class="m" style="background:${col[c]}"></span>${CATN[c]}`).join(' ')}</div>`;return s;}
-function renderReport(el){const A=DB.attempts,S=DB.sessions;const days=new Set(A.map(a=>dayKey(a.t)));const tot=S.reduce((s,x)=>s+x.dur,0);
+function reportCore(el,srcTxt){const A=DB.attempts,S=DB.sessions;const days=new Set(A.map(a=>dayKey(a.t)));const tot=S.reduce((s,x)=>s+x.dur,0);
  const okAll=A.length?Math.round(100*A.filter(a=>a.ok).length/A.length)+'%':'—';
  const kpi=(l,v)=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`;
- let h=`<h2 style="margin:6px 0">Relatório · Fase 1</h2><p class="note">Gerado a ${new Date().toLocaleDateString('pt-PT')} · dados guardados neste aparelho</p>`;
+ let h=`<h2 style="margin:6px 0">Relatório · Fase 1</h2><p class="note">Gerado a ${new Date().toLocaleDateString('pt-PT')} · aluno ${REP.aluno} · ${srcTxt}</p>`;
  h+=`<div class="kpis">${kpi('Dias de prática',days.size)}${kpi('Rondas feitas',S.length)}${kpi('Tempo nas rondas',fmtDur(tot))}${kpi('Certo à 1.ª tentativa',okAll)}</div>`;
  h+=`<h3>Evolução por dia (% certo à primeira tentativa)</h3>`+chartSVG();
  h+=`<h3>Por nível e modo</h3><table class="tbl"><tr><th>Nível</th><th>Ouvir e escolher</th><th>Ouvir e construir</th></tr><tr><td>Letras minúsculas</td><td>${cell('letras','escolher',x=>!x.item.startsWith('maiuscula-'))}</td><td>—</td></tr><tr><td>Letras maiúsculas</td><td>${cell('letras','escolher',x=>x.item.startsWith('maiuscula-'))}</td><td>—</td></tr>${CATS.filter(c=>c!=='letras').map(c=>`<tr><td>${CATN[c]}</td><td>${cell(c,'escolher')}</td><td>${c==='letras'?'—':cell(c,'construir')}</td></tr>`).join('')}</table><p class="note">% nas últimas 20 respostas; entre parênteses, o total de respostas.</p>`;
@@ -376,6 +388,26 @@ async function zipAll(){try{if(!window.JSZip)await loadScript('https://cdnjs.clo
  if(!n){alert('Ainda não há gravações neste aparelho.');return;}download(await zip.generateAsync({type:'blob'}),'audio-fase1.zip');}
 
 renderHome();
+</script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {getAuth,signInAnonymously,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {initializeFirestore,persistentLocalCache,collection,addDoc,getDocs} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+const cfg={apiKey:"AIzaSyAJdVLPoQnyq-Iu4rgP1HIYnCpArVYOc9Y",authDomain:"leitura-1m.firebaseapp.com",projectId:"leitura-1m",storageBucket:"leitura-1m.firebasestorage.app",messagingSenderId:"126861655472",appId:"1:126861655472:web:c966850e473f3d8650aa75"};
+try{
+ const app=initializeApp(cfg,'lecomigo');const auth=getAuth(app);
+ let db;try{db=initializeFirestore(app,{localCache:persistentLocalCache()});}catch(e){db=initializeFirestore(app,{});}
+ const FB={ready:false,
+  sync(){const d=DB;if(!d)return;const a0=d.sentA||0,s0=d.sentS||0;
+   d.attempts.slice(a0).forEach(x=>addDoc(collection(db,'lecomigo',ALUNO,'tentativas'),x).catch(()=>{}));
+   d.sessions.slice(s0).forEach(x=>addDoc(collection(db,'lecomigo',ALUNO,'rondas'),x).catch(()=>{}));
+   d.sentA=d.attempts.length;d.sentS=d.sessions.length;save();},
+  async load(aluno){const get=async c=>(await getDocs(collection(db,'lecomigo',aluno,c))).docs.map(x=>x.data()).sort((a,b)=>a.t-b.t);
+   return {attempts:await get('tentativas'),sessions:await get('rondas')};}};
+ window.FB=FB;
+ onAuthStateChanged(auth,u=>{if(u){FB.ready=true;FB.sync();}});
+ signInAnonymously(auth).catch(e=>console.warn('Firebase auth',e));
+}catch(e){console.warn('Firebase',e);}
 </script>
 </body>
 </html>
