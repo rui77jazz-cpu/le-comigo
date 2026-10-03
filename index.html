@@ -117,6 +117,10 @@ main{max-width:960px;margin:0 auto;padding:8px 16px 40px}
 .sbtn{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;font-size:15px;cursor:pointer;display:inline-block}
 .sbtn.danger{color:var(--bad)}
 .sbtn.on{border-color:var(--acc);background:var(--accbg)}
+.blk{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 16px;margin:12px 0}.blk-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}.blk h3{margin:0}
+.blk p{margin:8px 0}.chip{display:inline-block;background:#F6EFE0;border-radius:8px;padding:2px 8px;margin:2px 0;font-weight:700}.chip.ok{background:#DDF2E4}
+.errs{margin:4px 0 8px;padding-left:20px}.errs li{margin:4px 0}
+@media print{.blk{break-inside:avoid}}
 .repbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:4px 0 8px}.repbar input{font:inherit;padding:6px 8px;border:2px solid var(--line);border-radius:10px;width:80px}
 .rrow{display:grid;grid-template-columns:minmax(80px,1.2fr) minmax(90px,1fr) 110px 44px 44px 44px;gap:6px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin:4px 0}
 .rtxt{font-size:20px;font-weight:700}
@@ -193,6 +197,8 @@ pe:'<svg viewBox="0 0 100 100"><path d="M40 34 Q30 60 34 80 Q38 94 52 92 Q64 90 
 const KEY='lecomigo-a'+ALUNO;
 function load(){try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&Array.isArray(d.attempts))return d;}catch(e){}return{attempts:[],sessions:[],unlocked:{1:true}};}
 let DB=load();
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+window.addEventListener('storage',e=>{if(e.key===KEY)DB=load();});
 function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){}}
 function fbSync(){try{if(window.FB&&FB.ready)FB.sync();}catch(e){}}
 
@@ -274,7 +280,7 @@ function playItem(){const it=cur();return play(aid(it),it.say);}
 function praise(){if(Math.random()>0.3)return new Promise(r=>setTimeout(r,250));const id=Math.random()<.5?'msg-muito-bem':'msg-boa';return play(id,MSG[id]);}
 function showPic(it){const p=document.getElementById('pic');if(p&&it.img)p.innerHTML=IMG[it.img];}
 function startRound(cat,mode){stopAudio();R={cat,mode,items:pickItems(cat,CFG.RONDA),i:0,ok:0,t0:Date.now()};renderQ(true);}
-function renderQ(first){const it=cur();R.q={first:true,t:Date.now(),wrong:null,done:false,n:null};
+function renderQ(first){const it=cur();R.q={first:true,t:Date.now(),wrong:null,done:false,n:null,tries:[]};
  const dots=R.items.map((_,k)=>`<span class="dot ${k<R.i?'done':k===R.i?'now':''}"></span>`).join('');
  let body;
  if(R.mode==='escolher'){const n=nOptions(R.cat);R.q.n=n;const opts=shuffle([it,...distractors(it,n-1)]);
@@ -285,10 +291,10 @@ function renderQ(first){const it=cur();R.q={first:true,t:Date.now(),wrong:null,d
  else playItem();}
 function choose(btn,id){const q=R.q;if(q.done||btn.disabled)return;const it=cur();
  if(id===it.id){q.done=true;btn.classList.add('right');showPic(it);praise().then(()=>setTimeout(()=>{if(R&&R.q===q)nextQ();},350));}
- else{btn.classList.add('wrong');btn.disabled=true;if(q.first){q.first=false;const w=poolOf(R.cat).find(x=>x.id===id);q.wrong=w?w.txt:id;}
+ else{btn.classList.add('wrong');btn.disabled=true;{const w=poolOf(R.cat).find(x=>x.id===id);const wt=w?w.txt:id;q.tries.push(wt);if(q.first){q.first=false;q.wrong=wt;}}
   play('msg-tenta-outra-vez',MSG['msg-tenta-outra-vez']).then(()=>{if(!q.done)playItem();});}}
 function nextQ(){if(!R)return;const it=cur(),q=R.q;
- DB.attempts.push({t:Date.now(),cat:R.cat,mode:R.mode,item:it.id,ok:q.first,ms:Date.now()-q.t,n:q.n,wrong:q.wrong});if(q.first)R.ok++;save();fbSync();
+ DB.attempts.push({id:uid(),t:Date.now(),cat:R.cat,mode:R.mode,item:it.id,txt:it.txt,ok:q.first,ms:Date.now()-q.t,n:q.n,wrong:q.wrong,tries:q.tries});if(q.first)R.ok++;save();fbSync();
  R.i++;if(R.i>=R.items.length)finish();else renderQ(false);}
 function buildConstruct(it){const parts=it.parts,low=parts.map(p=>p.toLowerCase());
  const pool=R.cat==='silabas'?[...VOG,...CON]:R.cat==='palavras'?SYLPOOL:WORDPOOL;
@@ -306,10 +312,10 @@ function takePiece(i){const q=R.q;if(q.done||q.locked)return;const p=q.pieces[i]
 function unslot(s){const q=R.q;if(q.done||q.locked)return;const pi=q.slots[s];if(pi==null)return;q.pieces[pi].used=false;q.slots[s]=null;q.bad=null;rerenderCon();}
 function checkCon(){const q=R.q,it=cur();const bad=[];q.slots.forEach((pi,s)=>{if(q.pieces[pi].t!==it.parts[s])bad.push(s);});
  if(!bad.length){q.done=true;q.good=true;rerenderCon();showPic(it);playItem().then(praise).then(()=>setTimeout(()=>{if(R&&R.q===q)nextQ();},350));return;}
- if(q.first){q.first=false;q.wrong=q.slots.map(pi=>q.pieces[pi].t).join(R.cat==='frases'?' ':'');}
+ {const wt=q.slots.map(pi=>q.pieces[pi].t).join(R.cat==='frases'?' ':'');q.tries.push(wt);if(q.first){q.first=false;q.wrong=wt;}}
  q.bad=bad;q.locked=true;rerenderCon();
  play('msg-tenta-outra-vez',MSG['msg-tenta-outra-vez']).then(()=>{bad.forEach(s=>{q.pieces[q.slots[s]].used=false;q.slots[s]=null;});q.bad=null;q.locked=false;rerenderCon();playItem();});}
-function finish(){const dur=Date.now()-R.t0;DB.sessions.push({t:Date.now(),cat:R.cat,mode:R.mode,n:R.items.length,ok:R.ok,dur});save();fbSync();
+function finish(){const dur=Date.now()-R.t0;DB.sessions.push({id:uid(),t:Date.now(),cat:R.cat,mode:R.mode,n:R.items.length,ok:R.ok,dur});save();fbSync();
  const st=R.ok>=7?3:R.ok>=5?2:1;
  main.innerHTML=topBar(R.cat,R.mode)+`<div class="fim"><div class="stars">${'⭐'.repeat(st)}${'<span class="off">⭐</span>'.repeat(3-st)}</div><p class="fim-t">${R.ok} de ${R.items.length} à primeira!</p>
  <div class="row"><button class="bigbtn" onclick="startRound('${R.cat}','${R.mode}')">🔁 Outra vez</button><button class="bigbtn alt" onclick="renderHome()">🏠 Início</button></div></div>`;}
@@ -330,7 +336,7 @@ function openPanel(tab){stopAudio();ptabCur=tab;ovl.hidden=false;
  const el=document.getElementById('ptab');if(tab==='rel')renderReport(el);else renderStudio(el);}
 function closePanel(){if(mediaRec&&mediaRec.state==='recording')mediaRec.stop();ovl.hidden=true;ovl.innerHTML='';renderHome();}
 
-function cell(c,m,f){const a=DB.attempts.filter(x=>x.cat===c&&x.mode===m&&(!f||f(x)));if(!a.length)return'—';const r=a.slice(-20);return Math.round(100*r.filter(x=>x.ok).length/r.length)+'% <small>('+a.length+')</small>';}
+function cell(c,m,f){const a=DB.attempts.filter(x=>x.cat===c&&x.mode===m&&(!f||f(x)));if(!a.length)return'—';return Math.round(100*a.filter(x=>x.ok).length/a.length)+'% <small>('+a.filter(x=>x.ok).length+' de '+a.length+')</small>';}
 function chartSVG(){const A=DB.attempts;const days=[...new Set(A.map(a=>dayKey(a.t)))].sort();if(!days.length)return'<p class="note">Ainda sem dados.</p>';
  const W=640,H=240,L=44,Rr=14,T=12,B=36,col={letras:'#2563B8',silabas:'#D9473A',palavras:'#2E9E5B',frases:'#8E44AD'};
  const x=i=>days.length===1?L+(W-L-Rr)/2:L+i*(W-L-Rr)/(days.length-1),y=v=>T+(1-v)*(H-T-B);
@@ -340,25 +346,64 @@ function chartSVG(){const A=DB.attempts;const days=[...new Set(A.map(a=>dayKey(a
  CATS.forEach(c=>{const pts=days.map((d,i)=>{const a=A.filter(z=>z.cat===c&&dayKey(z.t)===d);return a.length?[x(i),y(a.filter(z=>z.ok).length/a.length)]:null;}).filter(Boolean);
   if(!pts.length)return;s+=`<polyline fill="none" stroke="${col[c]}" stroke-width="2.5" points="${pts.map(p=>p.join(',')).join(' ')}"/>`+pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${col[c]}"/>`).join('');});
  s+='</svg>';s+=`<div class="legend">${CATS.map(c=>`<span class="m" style="background:${col[c]}"></span>${CATN[c]}`).join(' ')}</div>`;return s;}
-function reportCore(el,srcTxt){const A=DB.attempts,S=DB.sessions;const days=new Set(A.map(a=>dayKey(a.t)));const tot=S.reduce((s,x)=>s+x.dur,0);
- const okAll=A.length?Math.round(100*A.filter(a=>a.ok).length/A.length)+'%':'—';
+const ALLIT=[...ITEMS.letras,...MAI,...ITEMS.silabas,...ITEMS.palavras,...ITEMS.frases];
+const BYID=Object.fromEntries(ALLIT.map(x=>[x.id,x]));
+const LVN={letras:'Letras',silabas:'Sílabas',palavras:'Palavras',frases:'Frases'};
+const fmtD=t=>new Date(t).toLocaleDateString('pt-PT'),fmtH=t=>new Date(t).toLocaleTimeString('pt-PT');
+const itTxt=a=>{const it=BYID[a.item];return it?it.txt:(a.txt||a.item);};
+const nivel=a=>LVN[a.cat]+((a.item||'').startsWith('maiuscula-')?' (maiúscula)':'');
+function wrongList(a){return a.tries&&a.tries.length?a.tries:(a.wrong?[a.wrong]:[]);}
+let LASTREP=null;
+function reportCore(el,srcTxt){LASTREP={data:DB,aluno:REP.aluno};const A=DB.attempts,S=DB.sessions;
+ const days=new Set(A.map(a=>dayKey(a.t)));const tot=A.reduce((s,x)=>s+Math.min(x.ms||0,60000),0);
+ const last=A.length?A[A.length-1].t:null;
  const kpi=(l,v)=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`;
- let h=`<h2 style="margin:6px 0">Relatório · Fase 1</h2><p class="note">Gerado a ${new Date().toLocaleDateString('pt-PT')} · aluno ${REP.aluno} · ${srcTxt}</p>`;
- h+=`<div class="kpis">${kpi('Dias de prática',days.size)}${kpi('Rondas feitas',S.length)}${kpi('Tempo nas rondas',fmtDur(tot))}${kpi('Certo à 1.ª tentativa',okAll)}</div>`;
+ let h=`<h2 style="margin:6px 0">Relatório · Fase 1</h2><p class="note">Gerado a ${fmtD(Date.now())} · aluno ${REP.aluno} · ${srcTxt}</p>`;
+ h+=`<div class="kpis">${kpi('Dias de prática',days.size)}${kpi('Tempo a praticar',fmtDur(tot))}${kpi('Respostas dadas',A.length)}${kpi('Última prática',last?fmtD(last)+' '+new Date(last).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}):'—')}</div>`;
+ const blocks=[['letras','🔤 Letras',[...ITEMS.letras,...MAI]],['silabas','🧩 Sílabas',ITEMS.silabas],['palavras','📖 Palavras',ITEMS.palavras],['frases','💬 Frases',ITEMS.frases]];
+ for(const [cat,title,list] of blocks){const aa=A.filter(x=>x.cat===cat);
+  const pct=aa.length?Math.round(100*aa.filter(x=>x.ok).length/aa.length)+'% certo à 1.ª tentativa ('+aa.length+' respostas)':'ainda não praticou';
+  const sabe=[],erra=[],pouco=[],nunca=[];
+  for(const it of list){const xs=aa.filter(x=>x.item===it.id);if(!xs.length){if(!(cat==='letras'&&it.up))nunca.push(it.txt);continue;}
+   const ok=xs.filter(x=>x.ok).length;
+   if(xs.length>=3&&xs.slice(-3).every(x=>x.ok)){sabe.push(it.txt);continue;}
+   if(ok<xs.length){const conf={};xs.forEach(x=>wrongList(x).forEach(w=>{const k=(x.mode==='construir'?'construiu':'escolheu')+' «'+w+'»';conf[k]=(conf[k]||0)+1;}));
+     erra.push({it,err:xs.length-ok,n:xs.length,conf:Object.entries(conf).sort((p,q)=>q[1]-p[1])});}
+   else if(xs.length>=3)sabe.push(it.txt);else pouco.push(it.txt);}
+  erra.sort((p,q)=>q.err-p.err);
+  h+=`<div class="blk"><div class="blk-h"><h3>${title}</h3><span class="note">${pct}</span></div>`;
+  if(aa.length){
+   h+=`<p><b>✅ Já sabe:</b> ${sabe.length?sabe.map(t=>`<span class="chip ok">${t}</span>`).join(' '):'<span class="note">ainda nenhum (conta quando acerta 3 vezes seguidas)</span>'}</p>`;
+   if(pouco.length)h+=`<p><b>🟡 Acertou, mas praticou pouco:</b> ${pouco.map(t=>`<span class="chip">${t}</span>`).join(' ')}</p>`;
+   h+=`<p><b>⚠️ Ainda erra:</b>${erra.length?'':' <span class="note">nada</span>'}</p>`;
+   if(erra.length)h+=`<ul class="errs">${erra.map(e=>`<li>Ouviu <b>«${e.it.txt}»</b>${e.it.up?' <small>(maiúscula)</small>':''} — errou ${e.err} de ${e.n} vezes: ${e.conf.map(([k,v])=>k+(v>1?' ('+v+'×)':'')).join(', ')}</li>`).join('')}</ul>`;
+   if(nunca.length)h+=`<p class="note">⚪ Ainda não praticou: ${nunca.join(', ')}</p>`;}
+  h+=`</div>`;}
  h+=`<h3>Evolução por dia (% certo à primeira tentativa)</h3>`+chartSVG();
- h+=`<h3>Por nível e modo</h3><table class="tbl"><tr><th>Nível</th><th>Ouvir e escolher</th><th>Ouvir e construir</th></tr><tr><td>Letras minúsculas</td><td>${cell('letras','escolher',x=>!x.item.startsWith('maiuscula-'))}</td><td>—</td></tr><tr><td>Letras maiúsculas</td><td>${cell('letras','escolher',x=>x.item.startsWith('maiuscula-'))}</td><td>—</td></tr>${CATS.filter(c=>c!=='letras').map(c=>`<tr><td>${CATN[c]}</td><td>${cell(c,'escolher')}</td><td>${c==='letras'?'—':cell(c,'construir')}</td></tr>`).join('')}</table><p class="note">% nas últimas 20 respostas; entre parênteses, o total de respostas.</p>`;
- h+=`<h3>Domínio por item</h3><div class="legend"><span class="m m0"></span>sem dados <span class="m m1"></span>&lt; 60% <span class="m m2"></span>60–89% <span class="m m3"></span>≥ 90% com 5+ respostas</div>`;
- h+=[['Minúsculas',ITEMS.letras],['Maiúsculas',MAI],...CATS.filter(c=>c!=='letras').map(c=>[CATN[c],ITEMS[c]])].map(([lab,list])=>`<div class="mgrid"><div class="mlabel">${lab}</div>${list.map(it=>{const s=itemStats(it.id);const r=s.n?s.ok/s.n:0;const lv=!s.n?0:(r>=.9&&s.n>=5)?3:r>=.6?2:1;return`<span class="mi m${lv}">${it.txt}${s.n?`<small>${s.ok}/${s.n}</small>`:''}</span>`;}).join('')}</div>`).join('');
- const errs=[];for(const it of [...ITEMS.letras,...MAI,...ITEMS.silabas,...ITEMS.palavras,...ITEMS.frases]){const s=itemStats(it.id);if(s.n>s.ok){const conf={};A.filter(a=>a.item===it.id&&a.wrong).forEach(a=>conf[a.wrong]=(conf[a.wrong]||0)+1);
-  errs.push({it,e:s.n-s.ok,n:s.n,conf:Object.entries(conf).sort((a,b)=>b[1]-a[1]).slice(0,3).map(x=>x[0]+(x[1]>1?' ('+x[1]+'×)':'')).join(', ')});}}
- errs.sort((a,b)=>b.e-a.e);
- h+=`<h3>Onde erra mais</h3>`+(errs.length?`<table class="tbl"><tr><th>Item</th><th>Erros</th><th>Confundiu com</th></tr>${errs.slice(0,12).map(x=>`<tr><td><b>${x.it.txt}</b> <small>${x.it.up?'Maiúscula':CATN[x.it.cat]}</small></td><td>${x.e} de ${x.n}</td><td>${x.conf||'—'}</td></tr>`).join('')}</table>`:'<p class="note">Ainda sem erros registados.</p>');
- h+=`<h3>Últimas rondas</h3>`+(S.length?`<table class="tbl"><tr><th>Data</th><th>Nível</th><th>Modo</th><th>Certo à 1.ª</th><th>Duração</th></tr>${S.slice(-15).reverse().map(s=>`<tr><td>${new Date(s.t).toLocaleString('pt-PT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td><td>${CATN[s.cat]}</td><td>${MODEN[s.mode]}</td><td>${s.ok}/${s.n}</td><td>${Math.max(1,Math.round(s.dur/60000))} min</td></tr>`).join('')}</table>`:'<p class="note">Ainda sem rondas.</p>');
- h+=`<div class="row noprint" style="justify-content:flex-start;margin-top:20px"><button class="sbtn" onclick="window.print()">🖨 Imprimir / PDF</button><button class="sbtn" onclick="exportData()">⬇ Exportar dados</button><label class="sbtn">⬆ Importar dados<input type="file" accept=".json" hidden onchange="importData(this.files[0])"></label><button class="sbtn danger" onclick="resetData()">🗑 Apagar dados</button></div>`;
+ h+=`<h3>Últimas sessões</h3>`+(S.length?`<table class="tbl"><tr><th>Dia</th><th>Hora</th><th>Nível</th><th>Modo</th><th>Certas à 1.ª</th><th>Duração</th></tr>${S.slice(-15).reverse().map(x=>`<tr><td>${fmtD(x.t-x.dur)}</td><td>${new Date(x.t-x.dur).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}</td><td>${LVN[x.cat]}</td><td>${MODEN[x.mode]}</td><td>${x.ok} de ${x.n}</td><td>${Math.max(1,Math.round(x.dur/60000))} min</td></tr>`).join('')}</table>`:'<p class="note">Ainda nenhuma sessão completa (uma sessão conta quando chega ao fim das 8 perguntas).</p>');
+ h+=`<div class="row noprint" style="justify-content:flex-start;margin-top:20px"><button class="sbtn" onclick="window.print()">🖨 Imprimir / PDF</button><button class="sbtn" onclick="exportExcel()">⬇ Excel</button><button class="sbtn danger" onclick="resetData()">🗑 Apagar dados</button></div>`;
  el.innerHTML=h;}
+async function exportExcel(){if(!LASTREP)return;try{if(!window.XLSX)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');}catch(e){alert('Não foi possível preparar o Excel (sem internet?).');return;}
+ const {data,aluno}=LASTREP;const A=data.attempts,S=data.sessions;
+ const res=a=>a.ok?'Certo à 1.ª':('Errou'+(a.tries&&a.tries.length?' '+a.tries.length+'×, depois acertou':' à 1.ª'));
+ const rows=A.map(a=>{const w=wrongList(a);return {'Dia':fmtD(a.t),'Hora':fmtH(a.t),'Nível':nivel(a),'Modo':MODEN[a.mode]||a.mode,'Ouviu':itTxt(a),'Respondeu':[...w,itTxt(a)].join(' → '),'Resultado':res(a),'Tempo (s)':Math.round((a.ms||0)/1000)};});
+ const ses=S.map(x=>({'Dia':fmtD(x.t-x.dur),'Início':fmtH(x.t-x.dur),'Fim':fmtH(x.t),'Nível':LVN[x.cat],'Modo':MODEN[x.mode]||x.mode,'Certas à 1.ª':x.ok+' de '+x.n,'Duração (min)':Math.round(x.dur/6000)/10}));
+ const sum=[];for(const cat of CATS){const aa=A.filter(x=>x.cat===cat);if(!aa.length){sum.push({'Nível':LVN[cat],'Respostas':0,'% certo à 1.ª':'','Item':'(ainda não praticou)','Vezes':'','Erros':'','Confusões':''});continue;}
+  const items=[...new Set(aa.map(x=>x.item))];
+  for(const id of items){const xs=aa.filter(x=>x.item===id);const ok=xs.filter(x=>x.ok).length;const conf={};xs.forEach(x=>wrongList(x).forEach(w=>conf[w]=(conf[w]||0)+1));
+   sum.push({'Nível':nivel(xs[0]),'Respostas':aa.length,'% certo à 1.ª':Math.round(100*aa.filter(x=>x.ok).length/aa.length)+'%','Item':itTxt(xs[0]),'Vezes':xs.length,'Erros':xs.length-ok,'Confusões':Object.entries(conf).map(([k,v])=>k+(v>1?' ('+v+'×)':'')).join(', ')});}}
+ const wb=XLSX.utils.book_new();
+ const add=(arr,name,w)=>{const ws=XLSX.utils.json_to_sheet(arr.length?arr:[{'':'Sem dados'}]);ws['!cols']=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,name);};
+ add(rows,'Respostas',[11,10,20,18,22,36,26,9]);add(ses,'Sessões',[11,10,10,10,18,12,13]);add(sum,'Resumo',[20,10,12,22,7,6,40]);
+ XLSX.writeFile(wb,'lecomigo-aluno'+aluno+'-'+dayKey(Date.now())+'.xlsx');}
 function exportData(){download(new Blob([JSON.stringify(DB,null,1)],{type:'application/json'}),'lecomigo-progresso-'+dayKey(Date.now())+'.json');}
 function importData(f){if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.attempts))throw 0;if(confirm('Substituir os dados deste aparelho pelos do ficheiro?')){DB=d;DB.unlocked=DB.unlocked||{1:true};save();openPanel('rel');}}catch(e){alert('Ficheiro inválido.');}};r.readAsText(f);}
-function resetData(){if(confirm('Apagar todo o progresso guardado neste aparelho?')&&confirm('Tens a certeza? Não dá para desfazer.')){DB={attempts:[],sessions:[],unlocked:DB.unlocked};save();openPanel('rel');}}
+function resetData(){const al=REP.aluno;if(!confirm('Apagar todo o progresso do aluno '+al+'?\n(neste aparelho e no Firebase)')||!confirm('Tens a certeza? Não dá para desfazer.'))return;
+ let local=0;if(al===ALUNO){local=DB.attempts.length;DB={attempts:[],sessions:[],unlocked:DB.unlocked};save();}
+ const done=()=>openPanel('rel');
+ if(!(window.FB&&FB.ready)){alert('Apagado neste aparelho ('+local+' respostas). Sem ligação ao Firebase: lá não foi apagado.');return done();}
+ FB.wipe(al).then(n=>{alert('Apagados '+n+' registos no Firebase'+(al===ALUNO?' e '+local+' respostas neste aparelho':'')+'.');done();})
+ .catch(e=>{FB.reset(al).then(()=>{alert('O Firebase não deixou apagar ('+(e&&e.code||e)+'). Os dados ficaram escondidos do relatório. Para apagar a sério, atualiza as regras do Firebase.');done();},()=>{alert('Não foi possível apagar no Firebase.');done();});});}
 
 /* ---------- gravações ---------- */
 const GROUPS=[['Letras (som)',ITEMS.letras],['Sílabas',ITEMS.silabas],['Palavras',ITEMS.palavras],['Frases',ITEMS.frases],['Palavras das frases',EXTRA],['Mensagens',MSGS]];
@@ -392,18 +437,22 @@ renderHome();
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {getAuth,signInAnonymously,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import {initializeFirestore,persistentLocalCache,collection,addDoc,getDocs} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import {initializeFirestore,persistentLocalCache,collection,doc,setDoc,getDocs,deleteDoc} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 const cfg={apiKey:"AIzaSyAJdVLPoQnyq-Iu4rgP1HIYnCpArVYOc9Y",authDomain:"leitura-1m.firebaseapp.com",projectId:"leitura-1m",storageBucket:"leitura-1m.firebasestorage.app",messagingSenderId:"126861655472",appId:"1:126861655472:web:c966850e473f3d8650aa75"};
 try{
  const app=initializeApp(cfg,'lecomigo');const auth=getAuth(app);
  let db;try{db=initializeFirestore(app,{localCache:persistentLocalCache()});}catch(e){db=initializeFirestore(app,{});}
  const FB={ready:false,
   sync(){const d=DB;if(!d)return;const a0=d.sentA||0,s0=d.sentS||0;
-   d.attempts.slice(a0).forEach(x=>addDoc(collection(db,'lecomigo',ALUNO,'tentativas'),x).catch(()=>{}));
-   d.sessions.slice(s0).forEach(x=>addDoc(collection(db,'lecomigo',ALUNO,'rondas'),x).catch(()=>{}));
+   const put=(c,x)=>{if(!x.id)x.id=uid();setDoc(doc(db,'lecomigo',ALUNO,c,x.id),x).catch(()=>{});};
+   d.attempts.slice(a0).forEach(x=>put('tentativas',x));d.sessions.slice(s0).forEach(x=>put('rondas',x));
    d.sentA=d.attempts.length;d.sentS=d.sessions.length;save();},
-  async load(aluno){const get=async c=>(await getDocs(collection(db,'lecomigo',aluno,c))).docs.map(x=>x.data()).sort((a,b)=>a.t-b.t);
-   return {attempts:await get('tentativas'),sessions:await get('rondas')};}};
+  async wipe(aluno){let n=0;for(const c of ['tentativas','rondas','marcos']){const snap=await getDocs(collection(db,'lecomigo',aluno,c));for(const d of snap.docs){await deleteDoc(d.ref);if(c!=='marcos')n++;}}return n;},
+  reset(aluno){const id=uid();return setDoc(doc(db,'lecomigo',aluno,'marcos',id),{id,t:Date.now(),tipo:'apagar'});},
+  async load(aluno){const get=async c=>(await getDocs(collection(db,'lecomigo',aluno,c))).docs.map(x=>x.data());
+   const marks=await get('marcos');const cut=marks.reduce((m,x)=>Math.max(m,x.t||0),0);
+   const clean=arr=>{const seen=new Set();return arr.filter(x=>x.t>cut&&!(x.id&&seen.has(x.id))&&(x.id?seen.add(x.id):1)).sort((a,b)=>a.t-b.t);};
+   return {attempts:clean(await get('tentativas')),sessions:clean(await get('rondas'))};}};
  window.FB=FB;
  onAuthStateChanged(auth,u=>{if(u){FB.ready=true;FB.sync();}});
  signInAnonymously(auth).catch(e=>console.warn('Firebase auth',e));
