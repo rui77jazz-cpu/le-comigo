@@ -240,7 +240,7 @@ const idbDel=id=>idbOp('readwrite',s=>s.delete(id));
 const idbKeys=()=>idbOp('readonly',s=>s.getAllKeys()).catch(()=>[]);
 const fileCache={};
 async function findFile(id){if(!id)return null;if(id in fileCache)return fileCache[id];
- for(const ext of ['mp3','m4a','wav','webm','ogg']){try{const r=await fetch(CFG.AUDIO_DIR+id+'.'+ext,{method:'HEAD'});if(r.ok)return fileCache[id]=CFG.AUDIO_DIR+id+'.'+ext;}catch(e){}}
+ for(const dir of [CFG.AUDIO_DIR,''])for(const ext of ['mp3','m4a']){try{const r=await fetch(dir+id+'.'+ext,{method:'HEAD'});if(r.ok)return fileCache[id]=dir+id+'.'+ext;}catch(e){}}
  return fileCache[id]=null;}
 let ptVoice=null;
 function loadVoices(){const vs=speechSynthesis.getVoices();ptVoice=vs.find(v=>v.lang==='pt-PT')||vs.find(v=>v.lang&&v.lang.toLowerCase().startsWith('pt'))||null;}
