@@ -96,6 +96,13 @@ u.hl{text-decoration:underline 3px var(--accent);text-underline-offset:4px;backg
 .tbl small{display:block;color:var(--soft);font-size:12px}.tbl tr.nada td{color:#B5B2AA}
 .jogo{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;font-size:15px}.jogo summary{cursor:pointer}.jogo summary span{color:var(--soft)}
 .jogo div{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}.jogo small{color:var(--ok);font-weight:800}
+#printArea{display:none}
+@media print{.wrap,.help{display:none!important}#printArea{display:block!important}body{background:#fff}}
+#printArea{font-family:Nunito,system-ui,sans-serif;color:#000;font-size:11pt}
+#printArea h1{font-size:18pt;margin:0 0 4px}#printArea h2{font-size:14pt;margin:14px 0 6px}#printArea h3{font-size:11.5pt;margin:10px 0 4px}
+#printArea table{width:100%;border-collapse:collapse;margin-bottom:8px}#printArea th,#printArea td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top;font-size:9.5pt}
+#printArea th{background:#eee}#printArea .al{page-break-before:always}#printArea .ok{color:#1a7f45;font-weight:800}#printArea .no{color:#c0392b;font-weight:800}#printArea .mut{color:#666}
+.jogo .r{display:flex;gap:6px}.jogo .r.x{color:var(--bad)}
 .review div{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;font-size:15px;border-left:6px solid var(--bad)}
 </style>
 </head>
@@ -119,6 +126,8 @@ u.hl{text-decoration:underline 3px var(--accent);text-underline-offset:4px;backg
   </div>
   <div id="profOut" style="display:none">
     <div class="pbar"><select id="fDias" onchange="desenharProf()"><option value="3">Últimos 3 dias</option><option value="7" selected>Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="0">Tudo</option></select><button class="tool" onclick="carregarProf()">🔄 Atualizar</button></div>
+    <div class="pbar"><select id="fAluno" onchange="desenharProf()"><option value="">Todos os alunos</option></select></div>
+    <div class="pbar"><button class="tool" style="flex:1" onclick="baixarExcel()">📊 Excel</button><button class="tool" style="flex:1" onclick="baixarPDF()">📄 PDF</button></div>
     <div id="profDados"></div>
   </div>
 </section>
@@ -165,6 +174,7 @@ u.hl{text-decoration:underline 3px var(--accent);text-underline-offset:4px;backg
   <div class="review" id="rev"></div>
 </section>
 </div>
+<div id="printArea"></div>
 
 <!-- AJUDA NÚMEROS ROMANOS -->
 <div class="help" id="help" onclick="if(event.target===this)ajuda(false)">
@@ -300,35 +310,34 @@ const G={};
 /* Pontuação */
 const FRASES=[
  ["A avó Alice fez uma manta.","A avó alice fez uma manta.","a avó Alice fez uma manta.","A avó Alice fez uma manta"],
- ["O menino está contente.","O menino está contente?","o menino está contente.","O menino está contente"],
- ["Eles cantaram uma canção.","Eles cantaram uma canção?","eles cantaram uma canção.","Eles cantaram uma canção"],
- ["A Laura gosta muito da avó.","A laura gosta muito da avó.","A Laura gosta muito da avó?","a Laura gosta muito da avó."],
- ["Hoje está muito frio.","Hoje está muito frio?","hoje está muito frio.","Hoje está muito frio"],
- ["A professora leu um poema.","A professora leu um poema?","a professora leu um poema.","A professora leu um poema"],
+ ["O menino está contente.","O menino, está contente.","o menino está contente.","O menino está contente"],
+ ["Eles cantaram uma canção.","Eles, cantaram uma canção.","eles cantaram uma canção.","Eles cantaram uma canção"],
+ ["A Laura gosta muito da avó.","A laura gosta muito da avó.","A Laura, gosta muito da avó.","a Laura gosta muito da avó."],
+ ["Hoje está muito frio.","Hoje está muito frio,","hoje está muito frio.","Hoje está muito frio"],
+ ["A professora leu um poema.","A professora, leu um poema.","a professora leu um poema.","A professora leu um poema"],
  ["Onde está a minha mochila?","Onde está a minha mochila.","onde está a minha mochila?","Onde está a minha mochila"],
  ["Que dia tão bonito!","Que dia tão bonito","que dia tão bonito!","Que dia tão bonito?"],
  ["Comprei pão, leite e fruta.","Comprei pão leite e fruta.","Comprei pão, leite, e fruta.","Comprei, pão, leite e fruta."],
  ["Na mochila tenho lápis, borracha e cadernos.","Na mochila tenho lápis borracha e cadernos.","Na mochila tenho lápis, borracha, e cadernos.","Na mochila, tenho lápis borracha e cadernos."],
  ["Quantos anos tens?","Quantos anos tens.","quantos anos tens?","Quantos anos tens!"],
- ["O Duarte comeu uma maçã.","O duarte comeu uma maçã.","O Duarte comeu uma maçã?","O Duarte comeu uma maçã"],
+ ["O Duarte comeu uma maçã.","O duarte comeu uma maçã.","O Duarte, comeu uma maçã.","O Duarte comeu uma maçã"],
  ["A Rita foi ao parque com o pai.","a Rita foi ao parque com o pai.","A rita foi ao parque com o pai.","A Rita foi ao parque com o pai"],
- ["Gostas de gelado de morango?","Gostas de gelado de morango.","gostas de gelado de morango?","Gostas de gelado de morango"],
+ ["De que gelado gostas?","De que gelado gostas.","de que gelado gostas?","De que gelado gostas"],
  ["Que medo tive do trovão!","Que medo tive do trovão","que medo tive do trovão!","Que medo tive do trovão?"],
  ["No jardim há rosas, tulipas e margaridas.","No jardim há rosas tulipas e margaridas.","No jardim há rosas, tulipas, e margaridas.","No jardim, há rosas tulipas e margaridas."],
- ["O Pedro tem um cão e um gato.","O pedro tem um cão e um gato.","O Pedro tem um cão e um gato?","o Pedro tem um cão e um gato."],
+ ["O Pedro tem um cão e um gato.","O pedro tem um cão e um gato.","O Pedro, tem um cão e um gato.","o Pedro tem um cão e um gato."],
  ["A que horas começa o filme?","A que horas começa o filme.","a que horas começa o filme?","A que horas começa o filme"],
  ["Que bonito é o arco-íris!","Que bonito é o arco-íris","que bonito é o arco-íris!","Que bonito é o arco-íris?"],
  ["Na feira comprei maçãs, peras e uvas.","Na feira comprei maçãs peras e uvas.","Na feira comprei maçãs, peras, e uvas.","Na feira comprei, maçãs, peras e uvas."],
- ["Lisboa é a capital de Portugal.","lisboa é a capital de Portugal.","Lisboa é a capital de portugal.","Lisboa é a capital de Portugal?"],
+ ["Lisboa é a capital de Portugal.","lisboa é a capital de Portugal.","Lisboa é a capital de portugal.","Lisboa, é a capital de Portugal."],
  ["Onde puseste o meu caderno?","Onde puseste o meu caderno.","onde puseste o meu caderno?","Onde puseste o meu caderno!"],
- ["A minha cor preferida é o azul.","A minha cor preferida é o azul?","a minha cor preferida é o azul.","A minha cor preferida é o azul"],
- ["As crianças brincam no recreio.","as crianças brincam no recreio.","As crianças brincam no recreio?","As crianças brincam no recreio"],
- ["Que golo tão bonito!","Que golo tão bonito.","que golo tão bonito!","Que golo tão bonito?"]
+ ["A minha cor preferida é o azul.","A minha cor preferida, é o azul.","a minha cor preferida é o azul.","A minha cor preferida é o azul"],
+ ["As crianças brincam no recreio.","as crianças brincam no recreio.","As crianças, brincam no recreio.","As crianças brincam no recreio"],
+ ["Que golo tão bonito!","Que golo tão bonito,","que golo tão bonito!","Que golo tão bonito?"]
 ];
-G.frase=()=>{const f=pick(FRASES);return mc("Português","Qual é a frase com a <b>pontuação certa</b>?",f[0],f.slice(1),`A frase certa é: «${f[0]}» Lembra-te da letra maiúscula no início e do sinal certo no fim.`,{speak:"Qual é a frase com a pontuação certa?"})};
-const FALTA=[["Gostas de chocolate","?"],["Como te chamas","?"],["Onde moras","?"],["Que horas são","?"],["Vens brincar comigo","?"],["Quem é a tua professora","?"],
- ["Que dia tão bonito","!"],["Que susto","!"],["Boa, ganhámos o jogo","!"],["Que bolo tão delicioso","!"],["Socorro","!"],
- ["O gato dorme no sofá","."],["Hoje fui à praia","."],["A Clara tem um cão","."],["O sol nasce de manhã","."],["Eu gosto de ler livros","."],["Já fizeste os trabalhos de casa","?"],["Queres um copo de água","?"],["Porque estás triste","?"],["Que frio está hoje","!"],["Parabéns pelo teu aniversário","!"],["Que lindo desenho","!"],["A Rita lê um livro","."],["Amanhã vou ao cinema","."],["O comboio chegou atrasado","."],["Os pássaros cantam na árvore","."]];
+G.frase=()=>{const f=pick(FRASES);return mc("Português","Qual é a frase com a <b>pontuação certa</b>?",f[0],f.slice(1),`A frase certa é: «${f[0]}» Lembra-te da letra maiúscula no início e do sinal certo no fim. Não se põe vírgula entre quem faz a ação e o que faz.`,{speak:"Qual é a frase com a pontuação certa?"})};
+const FALTA=[["Como te chamas","?"],["Onde moras","?"],["Que horas são","?"],["Quem é a tua professora","?"],["Porque estás triste","?"],["Quantos irmãos tens","?"],["Quando fazes anos","?"],["O que comeste ao almoço","?"],["Onde puseste a mochila","?"],
+ ["Que dia tão bonito","!"],["Que susto","!"],["Que bolo tão delicioso","!"],["Socorro","!"],["Que frio está hoje","!"],["Parabéns pelo teu aniversário","!"],["Que lindo desenho","!"],["Que medo tive do trovão","!"]];
 const SINAIS={".":"ponto final","?":"ponto de interrogação","!":"ponto de exclamação"};
 G.falta=()=>{const[f,sg]=pick(FALTA);const why={".":"A frase conta uma coisa, por isso acaba com ponto final.","?":"É uma pergunta, por isso leva ponto de interrogação.","!":"Mostra espanto, alegria ou susto, por isso leva ponto de exclamação."}[sg];
  return Object.assign(mc("Português",`Que sinal falta no fim da frase?<div class="poem" style="font-style:normal">${f} <b>__</b></div>`,sg,[".","?","!"].filter(x=>x!==sg),`${why} «${f}${sg}»`,{speak:"Que sinal falta no fim da frase? "+f,optBig:true}),{options:[".","?","!"],tf:true,three:true})};
@@ -489,8 +498,8 @@ const TEMPO=[
  ()=>mc("Estudo do Meio","Uma <b>década</b> tem…","10 anos",["100 anos","12 anos","1000 anos"],"Uma década = <b>10 anos</b>."),
  ()=>mc("Estudo do Meio","Um <b>século</b> tem…","100 anos",["10 anos","1000 anos","50 anos"],"Um século = <b>100 anos</b>."),
  ()=>mc("Estudo do Meio","Um <b>milénio</b> tem…","1000 anos",["100 anos","10 anos","10 000 anos"],"Um milénio = <b>1000 anos</b>."),
- ()=>mc("Estudo do Meio","Um século tem quantas <b>décadas</b>?","10",["100","12","5"],"100 anos ÷ 10 = <b>10 décadas</b>."),
- ()=>mc("Estudo do Meio","Um milénio tem quantos <b>séculos</b>?","10",["100","1000","5"],"1000 anos ÷ 100 = <b>10 séculos</b>."),
+ ()=>mc("Estudo do Meio","Um século tem 100 anos. Quantas <b>décadas</b> são?","10 décadas",["100 décadas","12 décadas","5 décadas"],"Cada década tem 10 anos. 100 anos ÷ 10 = <b>10 décadas</b>."),
+ ()=>mc("Estudo do Meio","Um milénio tem 1000 anos. Quantos <b>séculos</b> são?","10 séculos",["100 séculos","1000 séculos","5 séculos"],"Cada século tem 100 anos. 1000 anos ÷ 100 = <b>10 séculos</b>."),
  ()=>{const k=rr(2,9);return mc("Estudo do Meio",`<b>${k} décadas</b> são quantos anos?`,k*10+" anos",[k+" anos",k*100+" anos",(k+1)*10+" anos"],`Cada década tem 10 anos: ${k} × 10 = <b>${k*10} anos</b>.`)},
  ()=>{const k=rr(2,5);return mc("Estudo do Meio",`<b>${k} séculos</b> são quantos anos?`,k*100+" anos",[k*10+" anos",k*1000+" anos",(k+1)*100+" anos"],`Cada século tem 100 anos: ${k} × 100 = <b>${k*100} anos</b>.`)},
  ()=>{const k=rr(2,3);return mc("Estudo do Meio",`<b>${k} milénios</b> são quantos anos?`,k*1000+" anos",[k*100+" anos",k*10+" anos",(k+1)*1000+" anos"],`Cada milénio tem 1000 anos: ${k} × 1000 = <b>${k*1000} anos</b>.`)},
@@ -576,13 +585,13 @@ function gerar(t){
 }
 
 /* ---------- estado ---------- */
-let aluno=null,tema=null,Q=[],idx=0,certas=0,erradas=[],answered=false,placed=[];
+let aluno=null,tema=null,Q=[],idx=0,certas=0,erradas=[],answered=false,placed=[],log=[],t0=0;
 let store={};
 try{store=JSON.parse(localStorage.getItem("tpc3a")||"{}")}catch(e){store={}}
 function save(){try{localStorage.setItem("tpc3a",JSON.stringify(store))}catch(e){}}
 
 function calar(){try{speechSynthesis.cancel()}catch(e){}}
-function go(id){calar();document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));window.scrollTo(0,0);if(id==="sTemas")drawTemas()}
+function go(id){calar();$("help").classList.remove("on");document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));window.scrollTo(0,0);if(id==="sTemas")drawTemas()}
 function drawNomes(){
   $("nomes").innerHTML=ALUNOS.map(n=>`<button class="btn name" onclick="escolher('${n}')">${n}</button>`).join("");
 }
@@ -593,7 +602,7 @@ function drawTemas(){
   $("temas").innerHTML=Object.entries(TEMAS).map(([k,t])=>`<button class="btn tema" style="--c:${t.cor}" onclick="comecar('${k}')"><span class="ic">${t.ic}</span><span class="t">${t.nome}<small>${t.desc}</small></span><span class="st">${best[k]!=null?(estrelas(best[k])||"✔")+"<br><small>"+best[k]+"/10</small>":""}</span></button>`).join("");
 }
 function comecar(t){
-  tema=t;Q=gerar(t);idx=0;certas=0;erradas=[];
+  tema=t;Q=gerar(t);idx=0;certas=0;erradas=[];log=[];t0=Date.now();
   document.documentElement.style.setProperty("--accent",TEMAS[t].cor);
   go("sQuiz");mostrar();
   if(t==="rom")ajuda(true);
@@ -632,18 +641,19 @@ function verificarOrdem(){
   const ok=placed.every((p,k)=>p.t===q.items[k]);
   [...$("slots").children].forEach((el,k)=>{el.classList.remove("full");el.classList.add(placed[k].t===q.items[k]?"ok":"bad");el.onclick=null});
   $("bCheck").style.display="none";$("pool").style.display="none";
-  feedback(ok,"A ordem certa é: <b>"+q.items.join(" → ")+"</b>",q);
+  q.dada=placed.map(p=>p.t).join(" → ");feedback(ok,"A ordem certa é: <b>"+q.items.join(" → ")+"</b>",q);
 }
 function responder(i){
   if(answered)return;answered=true;calar();
   const q=Q[idx],ch=q.options[i],ok=ch===q.answer;
   document.querySelectorAll(".opt").forEach(b=>{const o=q.options[+b.dataset.i];b.disabled=true;if(o===q.answer)b.classList.add("ok");else if(+b.dataset.i===i)b.classList.add("bad")});
-  feedback(ok,"A resposta certa é: <b>"+q.answer+"</b>",q);
+  q.dada=ch;feedback(ok,"A resposta certa é: <b>"+q.answer+"</b>",q);
 }
 const BOM=["Muito bem! 🎉","Boa! 👏","Certíssimo! ✨","Isso mesmo! 💪","Excelente! 🌟"];
 const MAU=["Quase! 🙂","Ups, não foi desta. 💭","Não faz mal, aprende-se assim! 🌱"];
 function feedback(ok,certa,q){
   if(ok)certas++;else erradas.push({q,certa});
+  log.push({n:idx+1,p:txtCurto(q.prompt)+(q.big?" "+q.big:""),d:String(q.dada),c:q.type==="order"?q.items.join(" → "):String(q.answer),ok});
   const f=$("fb");f.className="fb on "+(ok?"ok":"bad");
   f.innerHTML=`<strong>${ok?pick(BOM):pick(MAU)}</strong>${ok?"":certa+"<br>"}${q.explain||""}${!ok&&q.help?ROMTIP:""}`;
   $("bNext").style.display="block";$("bNext").textContent=idx===Q.length-1?"Ver resultado 🏁":"Seguinte ➜";
@@ -663,9 +673,9 @@ function fim(){
   setSave("");go("sFim");registar();
 }
 /* ---------- guardar resultados (Firebase, com fila se não houver rede) ---------- */
-function txtCurto(h){const d=document.createElement("div");d.innerHTML=String(h).replace(/<br>/g," ").replace(/<div class="poem".*$/s,"");return d.textContent.trim().slice(0,140)}
+function txtCurto(h){const d=document.createElement("div");d.innerHTML=String(h).replace(/<br>/g," ").replace(/<div/g," <div");return d.textContent.replace(/\s+/g," ").trim().slice(0,200)}
 function registar(){
-  const rec={aluno,tema,temaNome:TEMAS[tema].nome,certas,total:Q.length,quando:new Date().toISOString(),
+  const rec={aluno,tema,temaNome:TEMAS[tema].nome,certas,total:Q.length,quando:new Date().toISOString(),inicio:new Date(t0).toISOString(),seg:Math.round((Date.now()-t0)/1000),respostas:log,
     erradas:erradas.map(e=>({p:txtCurto(e.q.prompt)+(e.q.big?" "+e.q.big:""),r:txtCurto(e.certa)}))};
   store.pend=store.pend||[];store.pend.push(rec);save();
   setSave("⏳ A guardar o resultado…");flush();
@@ -694,17 +704,66 @@ async function carregarProf(){
   try{PROF=await window.FB.loadAll(ALUNOS)}catch(e){out.innerHTML="<p class='sub'>Erro a ler o Firebase: "+(e.code||e.message)+". Confirma as regras do Firestore.</p>";return}
   desenharProf();
 }
+const esc=t=>String(t==null?"":t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fData=d=>new Date(d).toLocaleDateString("pt-PT",{day:"2-digit",month:"2-digit",year:"numeric"});
+const fHora=d=>new Date(d).toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"});
+const fDur=s=>s==null?"":Math.floor(s/60)+" min "+String(s%60).padStart(2,"0")+" s";
+function respostasDe(r){ // jogos novos: todas; jogos antigos: só os erros
+  if(r.respostas)return r.respostas;
+  return (r.erradas||[]).map((e,k)=>({n:"",p:e.p,d:"(não registada)",c:txtCurto(e.r).replace(/^A (resposta|ordem) certa é: /,""),ok:false}));
+}
+function filtrados(){
+  const dias=+$("fDias").value,lim=dias?Date.now()-dias*864e5:0,al=$("fAluno").value;
+  return PROF.filter(r=>new Date(r.quando).getTime()>=lim&&(!al||r.aluno===al)).sort((a,b)=>b.quando.localeCompare(a.quando));
+}
+function periodo(){const o=$("fDias");return o.options[o.selectedIndex].text+($("fAluno").value?" · "+$("fAluno").value:"")}
 function desenharProf(){
-  const dias=+$("fDias").value,lim=dias?Date.now()-dias*864e5:0;
-  const R=PROF.filter(r=>new Date(r.quando).getTime()>=lim).sort((a,b)=>b.quando.localeCompare(a.quando));
-  const T=Object.keys(TEMAS);
-  const fmt=d=>{const x=new Date(d);return x.toLocaleDateString("pt-PT",{day:"2-digit",month:"2-digit"})+" "+x.toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"})};
+  const sel=$("fAluno");if(sel.options.length<2)sel.innerHTML+=ALUNOS.map(a=>`<option>${a}</option>`).join("");
+  const R=filtrados(),T=Object.keys(TEMAS),AL=$("fAluno").value?[$("fAluno").value]:ALUNOS;
   let h=`<div class="tblw"><table class="tbl"><tr><th>Aluno</th>${T.map(t=>`<th>${TEMAS[t].ic}</th>`).join("")}<th>Jogos</th></tr>`;
-  for(const a of ALUNOS){const ra=R.filter(r=>r.aluno===a);
+  for(const a of AL){const ra=R.filter(r=>r.aluno===a);
     h+=`<tr class="${ra.length?"":"nada"}"><td>${a}</td>`+T.map(t=>{const rt=ra.filter(r=>r.tema===t);if(!rt.length)return"<td>–</td>";const best=Math.max(...rt.map(r=>r.certas));return `<td><b>${best}</b>/10<small>${rt.length}×</small></td>`}).join("")+`<td>${ra.length}</td></tr>`}
   h+=`</table></div><p class="sub" style="margin:6px 0 14px">Em cada tema: a <b>melhor</b> nota e quantas vezes jogou. ${T.map(t=>TEMAS[t].ic+" "+TEMAS[t].nome).join(" · ")}</p>`;
-  h+=`<h2>Últimos jogos</h2>`+(R.length?R.slice(0,60).map(r=>`<details class="jogo"><summary><span>${fmt(r.quando)}</span> <b>${r.aluno}</b> · ${TEMAS[r.tema]?TEMAS[r.tema].ic:""} ${r.temaNome} · <b>${r.certas}/${r.total}</b></summary>${(r.erradas||[]).length?r.erradas.map(e=>`<div>✗ ${e.p}<br><small>${e.r}</small></div>`).join(""):"<div>Acertou em tudo! 🏆</div>"}</details>`).join(""):"<p class='sub'>Ainda não há jogos neste período.</p>");
+  h+=`<h2>Últimos jogos</h2>`+(R.length?R.slice(0,80).map(r=>{const rs=respostasDe(r);
+    return `<details class="jogo"><summary><span>${fData(r.quando).slice(0,5)} ${fHora(r.quando)}</span> <b>${esc(r.aluno)}</b> · ${TEMAS[r.tema]?TEMAS[r.tema].ic:""} ${esc(r.temaNome)} · <b>${r.certas}/${r.total}</b>${r.seg!=null?` <span>· ${fDur(r.seg)}</span>`:""}</summary>`+
+    (r.respostas?rs.map(x=>`<div class="r ${x.ok?"":"x"}">${x.ok?"✔":"✗"} <span>${x.n}. ${esc(x.p)}<br><small style="color:var(--soft)">Respondeu: ${esc(x.d)}</small>${x.ok?"":`<br><small>Certa: ${esc(x.c)}</small>`}</span></div>`).join("")
+     :(rs.length?`<div><small style="color:var(--soft)">Jogo antigo: só ficaram guardados os erros.</small></div>`+rs.map(x=>`<div>✗ ${esc(x.p)}<br><small>Certa: ${esc(x.c)}</small></div>`).join(""):"<div>Acertou em tudo! 🏆</div>"))+`</details>`}).join(""):"<p class='sub'>Ainda não há jogos neste período.</p>");
   $("profDados").innerHTML=h;
+}
+function semDados(){const R=filtrados();if(!R.length){alert("Não há jogos neste período.");return null}return R}
+function loadScript(src){return new Promise((ok,ko)=>{const e=document.createElement("script");e.src=src;e.onload=ok;e.onerror=ko;document.head.appendChild(e)})}
+async function baixarExcel(){
+  const R=semDados();if(!R)return;
+  try{if(!window.XLSX)await loadScript("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js")}catch(e){alert("Não consegui abrir o Excel. Verifica a internet.");return}
+  const T=Object.keys(TEMAS),AL=$("fAluno").value?[$("fAluno").value]:ALUNOS,asc=R.slice().reverse();
+  const resumo=AL.map(a=>{const ra=R.filter(r=>r.aluno===a),o={Aluno:a};
+    T.forEach(t=>{const rt=ra.filter(r=>r.tema===t);o[TEMAS[t].nome+" (melhor)"]=rt.length?Math.max(...rt.map(r=>r.certas)):"";o[TEMAS[t].nome+" (jogos)"]=rt.length||""});
+    o["Total de jogos"]=ra.length;o["Último jogo"]=ra.length?fData(ra[0].quando)+" "+fHora(ra[0].quando):"";return o});
+  const jogos=asc.map(r=>({Data:fData(r.quando),Hora:fHora(r.quando),Aluno:r.aluno,Tema:r.temaNome,Certas:r.certas,Total:r.total,"Tempo":fDur(r.seg),"Respostas guardadas":r.respostas?"todas":"só os erros"}));
+  const resp=[];asc.forEach(r=>respostasDe(r).forEach(x=>resp.push({Data:fData(r.quando),Hora:fHora(r.quando),Aluno:r.aluno,Tema:r.temaNome,"N.º":x.n,Pergunta:x.p,"Resposta dada":x.d,"Resposta certa":x.c,"Certo?":x.ok?"✔":"✗"})));
+  const wb=XLSX.utils.book_new(),add=(rows,name,w)=>{const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{"":"Sem dados"}]);ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,name)};
+  add(resumo,"Resumo",[12].concat(T.flatMap(()=>[16,10]),[14,18]));
+  add(jogos,"Jogos",[11,7,12,18,8,7,12,18]);
+  add(resp,"Respostas",[11,7,12,18,5,60,30,30,8]);
+  XLSX.writeFile(wb,"TPC_3A_"+new Date().toISOString().slice(0,10)+($("fAluno").value?"_"+$("fAluno").value:"")+".xlsx");
+}
+function baixarPDF(){
+  const R=semDados();if(!R)return;
+  const T=Object.keys(TEMAS),AL=($("fAluno").value?[$("fAluno").value]:ALUNOS).filter(a=>R.some(r=>r.aluno===a));
+  let h=`<h1>Relatório do TPC — 3.º A · EB do Cavaco</h1><p class="mut">${esc(periodo())} · gerado a ${fData(new Date())} às ${fHora(new Date())}</p>`;
+  h+=`<h2>Resumo</h2><table><tr><th>Aluno</th>${T.map(t=>`<th>${TEMAS[t].nome}</th>`).join("")}<th>Jogos</th></tr>`+
+    ($("fAluno").value?[$("fAluno").value]:ALUNOS).map(a=>{const ra=R.filter(r=>r.aluno===a);return `<tr><td>${a}</td>`+T.map(t=>{const rt=ra.filter(r=>r.tema===t);return `<td>${rt.length?Math.max(...rt.map(r=>r.certas))+"/10 ("+rt.length+"×)":"–"}</td>`}).join("")+`<td>${ra.length}</td></tr>`}).join("")+`</table><p class="mut">Em cada tema: a melhor nota e quantas vezes jogou.</p>`;
+  for(const a of AL){const ra=R.filter(r=>r.aluno===a).reverse();
+    h+=`<section class="al"><h2>${a}</h2><p class="mut">${ra.length} jogo${ra.length>1?"s":""} neste período</p>`;
+    for(const r of ra){const rs=respostasDe(r);
+      h+=`<h3>${fData(r.quando)} ${fHora(r.quando)} · ${esc(r.temaNome)} · ${r.certas}/${r.total}${r.seg!=null?" · "+fDur(r.seg):""}</h3>`;
+      if(!r.respostas&&!rs.length){h+=`<p>Acertou em tudo (jogo antigo, sem o registo das respostas).</p>`;continue}
+      if(!r.respostas)h+=`<p class="mut">Jogo antigo: só ficaram guardados os erros.</p>`;
+      h+=`<table><tr><th style="width:4%">N.º</th><th>Pergunta</th><th style="width:24%">Respondeu</th><th style="width:24%">Resposta certa</th><th style="width:5%"></th></tr>`+
+        rs.map(x=>`<tr><td>${x.n}</td><td>${esc(x.p)}</td><td>${esc(x.d)}</td><td>${esc(x.c)}</td><td class="${x.ok?"ok":"no"}">${x.ok?"✔":"✗"}</td></tr>`).join("")+`</table>`}
+    h+=`</section>`}
+  $("printArea").innerHTML=h;
+  setTimeout(()=>window.print(),100);
 }
 function falar(){
   try{
