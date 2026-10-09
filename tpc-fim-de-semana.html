@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>TPC do 3.º A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF8EC;--card:#FFFFFF;--ink:#2B2A33;--soft:#6B6A75;--line:#E8DFCF;
+  --por:#2F6FD6;--mat:#E0483E;--em:#2E9E5B;--rom:#8A4FD8;--mix:#E89A12;
+  --ok:#22A45D;--okbg:#E5F7EC;--bad:#E0483E;--badbg:#FDECEA;
+  --accent:var(--mix);
+  color-scheme:light;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Nunito,system-ui,sans-serif;font-weight:600}
+body{min-height:100vh}
+.wrap{max-width:520px;margin:0 auto;padding:16px 16px 40px}
+h1{font-weight:900;font-size:28px;margin:8px 0 4px;line-height:1.15}
+h2{font-weight:900;font-size:22px;margin:0 0 12px}
+.sub{color:var(--soft);margin:0 0 18px;font-size:16px}
+.screen{display:none}.screen.on{display:block}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:16px 14px;font:inherit;font-weight:800;font-size:18px;cursor:pointer;background:var(--card);color:var(--ink);box-shadow:0 3px 0 var(--line);transition:transform .08s}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--line)}
+.btn.main{background:var(--accent);color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.btn.main:disabled{opacity:.4}
+.name{font-size:19px;padding:18px 10px}
+.tema{display:flex;align-items:center;gap:14px;text-align:left;margin-bottom:12px;border-left:8px solid var(--c)}
+.tema .ic{font-size:30px;width:44px;text-align:center}
+.tema .t{flex:1}
+.tema small{display:block;color:var(--soft);font-weight:600;font-size:14px}
+.tema .st{font-size:15px;white-space:nowrap}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.top .menu{border:2px solid var(--line);background:#fff;border-radius:12px;padding:8px 12px;font:inherit;font-weight:800;font-size:16px;cursor:pointer;color:var(--ink);white-space:nowrap}
+.bar{flex:1;height:14px;background:var(--line);border-radius:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s}
+.cnt{font-weight:900;color:var(--soft);min-width:44px;text-align:right}
+.qcard{background:var(--card);border-radius:20px;padding:18px;box-shadow:0 3px 0 var(--line);margin-bottom:14px}
+.qtag{display:inline-block;font-size:13px;font-weight:800;color:#fff;background:var(--accent);border-radius:20px;padding:3px 10px;margin-bottom:10px}
+.qtxt{font-size:21px;font-weight:800;line-height:1.35}
+.qtxt b{color:var(--accent)}
+.big{font-size:44px;font-weight:900;text-align:center;letter-spacing:2px;margin:10px 0 2px;color:var(--accent)}
+u.hl{text-decoration:underline 3px var(--accent);text-underline-offset:4px;background:#FFF1C9}
+.poem{background:#FFFBF2;border:2px dashed var(--line);border-radius:14px;padding:12px 14px;font-size:19px;line-height:1.6;margin-top:10px;font-style:italic}
+.vis{display:flex;justify-content:center;margin-top:10px}
+.vis svg{max-width:100%;height:auto}
+.tools{display:flex;gap:8px;margin-top:12px}
+.tool{border:2px solid var(--line);background:#fff;border-radius:12px;padding:6px 12px;font:inherit;font-weight:800;font-size:15px;cursor:pointer;color:var(--ink)}
+.opts{display:grid;gap:10px}
+.opt{text-align:left;font-size:19px;font-weight:700;line-height:1.3;border:3px solid transparent}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}
+.opt.bad{background:var(--badbg);border-color:var(--bad)}
+.opt:disabled{color:var(--ink);opacity:1}
+.opts.tf{grid-template-columns:1fr 1fr}
+.opts.tf .opt,.opts.tf3 .opt{text-align:center}
+.opts.tf3{grid-template-columns:1fr 1fr 1fr}
+.opts.tf3 .opt{font-size:34px!important;padding:12px 0}
+.slots{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.slot{min-height:54px;border:3px dashed var(--line);border-radius:14px;display:flex;align-items:center;padding:0 12px;font-size:19px;font-weight:800;gap:10px;background:#fff}
+.slot .n{color:var(--soft);font-size:15px;width:22px}
+.slot.full{border-style:solid;border-color:var(--accent);cursor:pointer}
+.slot.ok{border-color:var(--ok);background:var(--okbg)}
+.slot.bad{border-color:var(--bad);background:var(--badbg)}
+.pool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{border:0;border-radius:14px;padding:12px 16px;font:inherit;font-size:19px;font-weight:800;background:var(--accent);color:#fff;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.chip:disabled{visibility:hidden}
+.fb{border-radius:16px;padding:14px 16px;margin:14px 0;font-size:17px;line-height:1.4;display:none}
+.fb.on{display:block}
+.fb.ok{background:var(--okbg);border:2px solid var(--ok)}
+.fb.bad{background:var(--badbg);border:2px solid var(--bad)}
+.fb strong{font-size:20px;display:block;margin-bottom:4px}
+.help{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.help.on{display:flex}
+.help .in{background:#fff;border-radius:22px 22px 0 0;padding:20px 18px 26px;max-width:520px;width:100%;max-height:88vh;overflow:auto}
+.rtab{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:10px 0 14px}
+.rtab div{background:#F3ECFC;border-radius:12px;text-align:center;padding:8px 0;font-weight:900}
+.rtab div span{display:block;font-size:30px;color:var(--rom)}
+.rule{background:#FAF7FF;border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:17px;line-height:1.4}
+.rule b{color:var(--rom)}
+.end{text-align:center}
+.stars{font-size:56px;letter-spacing:6px;margin:10px 0}
+.score{font-size:30px;font-weight:900}
+.stack>*+*{margin-top:10px}
+.who{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.who button{background:none;border:0;color:var(--soft);font:inherit;font-size:15px;text-decoration:underline;cursor:pointer}
+.review{text-align:left;margin-top:16px}
+.savest{font-size:16px;font-weight:800;color:var(--soft);margin:4px 0 14px;min-height:22px}
+.linkprof{background:none;border:0;color:var(--soft);font:inherit;font-size:14px;text-decoration:underline;cursor:pointer}
+.pinbox{width:100%;font:inherit;font-size:24px;padding:14px;border-radius:14px;border:2px solid var(--line);text-align:center;letter-spacing:6px}
+.pbar{display:flex;gap:8px;margin-bottom:12px}.pbar select{flex:1;font:inherit;font-size:16px;padding:8px;border-radius:12px;border:2px solid var(--line);background:#fff}
+.tblw{overflow-x:auto}.tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;font-size:15px}
+.tbl th,.tbl td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line)}.tbl td:first-child,.tbl th:first-child{text-align:left}
+.tbl small{display:block;color:var(--soft);font-size:12px}.tbl tr.nada td{color:#B5B2AA}
+.jogo{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;font-size:15px}.jogo summary{cursor:pointer}.jogo summary span{color:var(--soft)}
+.jogo div{margin-top:8px;padding-top:8px;border-top:1px solid var(--line)}.jogo small{color:var(--ok);font-weight:800}
+.review div{background:#fff;border-radius:12px;padding:10px 12px;margin-bottom:6px;font-size:15px;border-left:6px solid var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- NOME -->
+<section id="sNome" class="screen on">
+  <h1>Olá! 👋</h1>
+  <p class="sub">TPC do fim de semana · 3.º A<br>Toca no teu nome.</p>
+  <div class="grid" id="nomes"></div>
+  <p style="text-align:center;margin-top:28px"><button class="linkprof" onclick="abrirProf()">Área do professor</button></p>
+</section>
+
+<!-- PROFESSOR -->
+<section id="sProf" class="screen">
+  <div class="who"><h1>👨‍🏫 Professor</h1><button onclick="go('sNome')">Voltar</button></div>
+  <div id="profIn" class="stack">
+    <input id="pin" type="password" inputmode="numeric" placeholder="PIN" class="pinbox" onkeydown="if(event.key==='Enter')entrarProf()">
+    <button class="btn main" onclick="entrarProf()">Entrar</button>
+  </div>
+  <div id="profOut" style="display:none">
+    <div class="pbar"><select id="fDias" onchange="desenharProf()"><option value="3">Últimos 3 dias</option><option value="7" selected>Últimos 7 dias</option><option value="30">Últimos 30 dias</option><option value="0">Tudo</option></select><button class="tool" onclick="carregarProf()">🔄 Atualizar</button></div>
+    <div id="profDados"></div>
+  </div>
+</section>
+
+<!-- TEMAS -->
+<section id="sTemas" class="screen">
+  <div class="who"><h1 id="ola">Olá</h1><button onclick="go('sNome')">Não sou eu</button></div>
+  <p class="sub">O que queres treinar? Cada jogo tem 10 perguntas.</p>
+  <div id="temas"></div>
+</section>
+
+<!-- QUIZ -->
+<section id="sQuiz" class="screen">
+  <div class="top">
+    <button class="menu" onclick="go('sTemas')">🏠 Menu</button>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="cnt" id="cnt">1/10</div>
+  </div>
+  <div class="qcard">
+    <span class="qtag" id="qtag"></span>
+    <div class="qtxt" id="qtxt"></div>
+    <div id="qvis"></div>
+    <div class="tools">
+      <button class="tool" onclick="falar()">🔊 Ouvir</button>
+      <button class="tool" id="bHelp" onclick="ajuda(true)">❓ Ajuda</button>
+    </div>
+  </div>
+  <div id="area"></div>
+  <div class="fb" id="fb"></div>
+  <button class="btn main" id="bNext" style="display:none" onclick="seguinte()">Seguinte ➜</button>
+</section>
+
+<!-- FIM -->
+<section id="sFim" class="screen end">
+  <h1 id="fimT">Acabaste!</h1>
+  <div class="stars" id="stars"></div>
+  <div class="score" id="score"></div>
+  <p class="sub" id="fimMsg"></p>
+  <div class="stack">
+    <div id="saveSt" class="savest"></div>
+    <button class="btn main" onclick="comecar(tema)">🔁 Jogar outra vez</button>
+    <button class="btn" onclick="go('sTemas')">🏠 Escolher outro tema</button>
+  </div>
+  <div class="review" id="rev"></div>
+</section>
+</div>
+
+<!-- AJUDA NÚMEROS ROMANOS -->
+<div class="help" id="help" onclick="if(event.target===this)ajuda(false)">
+  <div class="in">
+    <h2>🏛️ Números romanos</h2>
+    <div class="rtab">
+      <div><span>I</span>1</div><div><span>V</span>5</div><div><span>X</span>10</div><div><span>L</span>50</div><div><span>C</span>100</div>
+    </div>
+    <div class="rule"><b>Letras iguais juntas somam</b> (no máximo 3 vezes).<br>III = 1 + 1 + 1 = 3 · XX = 20</div>
+    <div class="rule"><b>Mais pequena à direita: soma.</b><br>VI = 5 + 1 = 6 · XV = 10 + 5 = 15</div>
+    <div class="rule"><b>Mais pequena à esquerda: tira.</b><br>IV = 5 − 1 = 4 · IX = 10 − 1 = 9 · XL = 50 − 10 = 40</div>
+    <div class="rule"><b>Os séculos escrevem-se em números romanos.</b><br>Século XX = século 20 · Século XXI = século 21</div>
+    <button class="btn main" style="margin-top:14px" onclick="ajuda(false)">Percebi! 👍</button>
+  </div>
+</div>
+
+<script>
+/* ---------- utilidades ---------- */
+const ALUNOS=["Amanda","André","Clara","Duarte","Gabriel","Gonçalo","Guilherme","Lourenço","Matias","Ricardo","Rodrigo"];
+const r=n=>Math.floor(Math.random()*n);
+const rr=(a,b)=>a+r(b-a+1);
+const pick=a=>a[r(a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=r(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+const $=id=>document.getElementById(id);
+function mc(tag,prompt,correct,wrongs,explain,extra){
+  correct=String(correct);
+  const w=[...new Set(wrongs.map(String))].filter(x=>x!==correct&&x!=="");
+  return Object.assign({type:'mc',tag,prompt,answer:correct,options:shuffle([correct,...shuffle(w).slice(0,3)]),explain},extra||{});
+}
+function tf(tag,prompt,isTrue,explain,extra){
+  return Object.assign({type:'mc',tf:true,tag,prompt,answer:isTrue?'Verdadeiro':'Falso',options:['Verdadeiro','Falso'],explain},extra||{});
+}
+function order(tag,prompt,items,explain,extra){
+  return Object.assign({type:'order',tag,prompt,items:items.map(String),explain},extra||{});
+}
+
+/* ---------- números por extenso ---------- */
+const U=["zero","um","dois","três","quatro","cinco","seis","sete","oito","nove","dez","onze","doze","treze","catorze","quinze","dezasseis","dezassete","dezoito","dezanove"];
+const D=["","","vinte","trinta","quarenta","cinquenta","sessenta","setenta","oitenta","noventa"];
+const C=["","cento","duzentos","trezentos","quatrocentos","quinhentos","seiscentos","setecentos","oitocentos","novecentos"];
+function ext(n){
+  if(n===0)return"zero"; if(n===100)return"cem";
+  const c=Math.floor(n/100),rest=n%100,p=[];
+  if(c)p.push(C[c]);
+  if(rest){ if(rest<20)p.push(U[rest]); else{const d=Math.floor(rest/10),u=rest%10;p.push(u?D[d]+" e "+U[u]:D[d]);} }
+  return p.join(" e ");
+}
+const ERR={"um":["un","hum"],"dois":["dóis","duis"],"três":["tres","trez"],"quatro":["coatro","quatru"],"cinco":["sinco","cimco"],"seis":["ceis","seiz"],"sete":["cete","sette"],"oito":["oitu","hoito"],"nove":["novi","nóve"],
+"dez":["dês","des"],"onze":["onse","honze"],"doze":["dose","dosse"],"treze":["trese","tresse"],"catorze":["catorse","quatorse"],"quinze":["quinse","quimze"],"dezasseis":["dezaseis","desasseis"],"dezassete":["dezasete","desassete"],"dezoito":["desoito","dezoitu"],"dezanove":["desanove","dezanovi"],
+"vinte":["vimte","vinti"],"trinta":["trimta","trinte"],"quarenta":["coarenta","quarrenta"],"cinquenta":["cincoenta","sinquenta"],"sessenta":["sesenta","cessenta"],"setenta":["cetenta","settenta"],"oitenta":["oitemta","hoitenta"],"noventa":["nuventa","novemta"],
+"cento":["sento","cemto"],"duzentos":["dozentos","duzemtos"],"trezentos":["tresentos","trezemtos"],"quatrocentos":["cuatrocentos","quatrosentos"],"quinhentos":["quinhemtos","quinentos"],"seiscentos":["seissentos","seisentos"],"setecentos":["setessentos","setesentos"],"oitocentos":["oitossentos","oitosentos"],"novecentos":["novessentos","novesentos"]};
+function misspells(s){
+  const ws=s.split(" "),out=[];
+  ws.forEach((w,i)=>{(ERR[w]||[]).forEach(e=>{const c=ws.slice();c[i]=e;out.push(c.join(" "))})});
+  const es=[...s.matchAll(/ e /g)].map(m=>m.index);
+  es.forEach(ix=>out.push(s.slice(0,ix)+" "+s.slice(ix+3)));
+  return out;
+}
+function niceNum(){let n;do{n=rr(101,989)}while(n%100===0||n%10===0&&r(2));return n}
+
+/* ---------- ordinais ---------- */
+const O1=["","primeiro","segundo","terceiro","quarto","quinto","sexto","sétimo","oitavo","nono"];
+const O10=["","décimo","vigésimo","trigésimo","quadragésimo","quinquagésimo","sexagésimo","","octogésimo","nonagésimo"];
+function ord(n){if(n===100)return"centésimo";const d=Math.floor(n/10),u=n%10;return[O10[d],O1[u]].filter(Boolean).join(" ")}
+function ordNum(){let n;do{n=rr(11,99)}while(Math.floor(n/10)===7||n%10===0&&r(2));return n}
+
+/* ---------- romanos ---------- */
+function rom(n){const v=[[100,"C"],[90,"XC"],[50,"L"],[40,"XL"],[10,"X"],[9,"IX"],[5,"V"],[4,"IV"],[1,"I"]];let s="";for(const[a,b]of v)while(n>=a){s+=b;n-=a}return s}
+function romAdd(s){const val={I:1,V:5,X:10,L:50,C:100};return[...s].reduce((t,c)=>t+val[c],0)} // leitura errada (só a somar)
+function romWrongs(n){
+  const s=rom(n),w=[];
+  const rep=[["XC","LXXXX"],["XL","XXXX"],["IX","VIIII"],["IV","IIII"]];
+  for(const[a,b]of rep)if(s.includes(a)){w.push(s.replace(a,b));break}
+  const mir=[["XC","CX"],["XL","LX"],["IX","XI"],["IV","VI"]];
+  for(const[a,b]of mir)if(s.includes(a)){w.push(s.replace(a,b));break}
+  if(n>1)w.push(rom(n-1)); w.push(rom(n+1));
+  if(n>5)w.push(rom(n-5)); w.push(rom(n+5));
+  if(n>10)w.push(rom(n-10));
+  return w;
+}
+const ROMTIP=" Toca em ❓ Ajuda para veres a tabela.";
+
+/* ---------- desenhos ---------- */
+function svgMAB(c,d,u){
+  const s=6,parts=[];let x=4;
+  for(let i=0;i<c;i++){ // placa
+    let g=`<rect x="${x}" y="4" width="60" height="60" fill="#F6C453" stroke="#B5862A" stroke-width="1.5"/>`;
+    for(let k=1;k<10;k++)g+=`<line x1="${x+k*s}" y1="4" x2="${x+k*s}" y2="64" stroke="#B5862A" stroke-width=".6"/><line x1="${x}" y1="${4+k*s}" x2="${x+60}" y2="${4+k*s}" stroke="#B5862A" stroke-width=".6"/>`;
+    parts.push(g);x+=68;
+  }
+  let w1=Math.max(x,4);x=4;
+  const y2=c?76:4;
+  for(let i=0;i<d;i++){ // barra
+    let g=`<rect x="${x}" y="${y2}" width="${s}" height="60" fill="#6FB7F2" stroke="#2C6EA8" stroke-width="1.2"/>`;
+    for(let k=1;k<10;k++)g+=`<line x1="${x}" y1="${y2+k*s}" x2="${x+s}" y2="${y2+k*s}" stroke="#2C6EA8" stroke-width=".6"/>`;
+    parts.push(g);x+=11;
+  }
+  x+=d?10:0;
+  for(let i=0;i<u;i++){ // cubinho
+    const cx=x+(i%3)*10,cy=y2+42-Math.floor(i/3)*10;
+    parts.push(`<rect x="${cx}" y="${cy}" width="${s}" height="${s}" fill="#F27F7F" stroke="#A83A3A" stroke-width="1"/>`);
+  }
+  const W=Math.max(w1,x+32,120),H=y2+66;
+  return `<svg viewBox="0 0 ${W} ${H}" width="${Math.min(W*2.6,460)}">${parts.join("")}</svg>`;
+}
+function svgAbaco(c,d,u){
+  const rods=[["C",c,"#E0483E"],["D",d,"#2F6FD6"],["U",u,"#2E9E5B"]];let g=`<rect x="10" y="150" width="220" height="14" rx="4" fill="#8B5E3C"/>`;
+  rods.forEach(([l,n,col],i)=>{const x=50+i*70;
+    g+=`<rect x="${x-3}" y="20" width="6" height="132" fill="#B08968"/>`;
+    for(let k=0;k<n;k++)g+=`<ellipse cx="${x}" cy="${142-k*13}" rx="18" ry="6.5" fill="${col}" stroke="rgba(0,0,0,.25)"/>`;
+    g+=`<text x="${x}" y="185" text-anchor="middle" font-size="18" font-weight="900" font-family="Nunito,sans-serif" fill="#2B2A33">${l}</text>`;
+  });
+  return `<svg viewBox="0 0 240 195" width="260">${g}</svg>`;
+}
+function svgRelogio(h,m){
+  let g=`<circle cx="100" cy="100" r="92" fill="#fff" stroke="#2B2A33" stroke-width="5"/>`;
+  for(let i=0;i<60;i++){const a=i*6*Math.PI/180,R1=i%5?84:78;g+=`<line x1="${100+R1*Math.sin(a)}" y1="${100-R1*Math.cos(a)}" x2="${100+88*Math.sin(a)}" y2="${100-88*Math.cos(a)}" stroke="#2B2A33" stroke-width="${i%5?1:2.5}"/>`}
+  for(let i=1;i<=12;i++){const a=i*30*Math.PI/180;g+=`<text x="${100+64*Math.sin(a)}" y="${100-64*Math.cos(a)+7}" text-anchor="middle" font-size="19" font-weight="900" font-family="Nunito,sans-serif" fill="#2B2A33">${i}</text>`}
+  const ah=((h%12)+m/60)*30*Math.PI/180,am=m*6*Math.PI/180;
+  g+=`<line x1="100" y1="100" x2="${100+42*Math.sin(ah)}" y2="${100-42*Math.cos(ah)}" stroke="#E0483E" stroke-width="8" stroke-linecap="round"/>`;
+  g+=`<line x1="100" y1="100" x2="${100+70*Math.sin(am)}" y2="${100-70*Math.cos(am)}" stroke="#2F6FD6" stroke-width="5" stroke-linecap="round"/>`;
+  g+=`<circle cx="100" cy="100" r="6" fill="#2B2A33"/>`;
+  return `<svg viewBox="0 0 200 200" width="210">${g}</svg>`;
+}
+const hm=(h,m)=>`${h}:${String(m).padStart(2,"0")}`;
+
+/* =========================================================
+   PERGUNTAS
+   ========================================================= */
+const G={};
+
+/* ----- PORTUGUÊS ----- */
+/* Pontuação */
+const FRASES=[
+ ["A avó Alice fez uma manta.","A avó alice fez uma manta.","a avó Alice fez uma manta.","A avó Alice fez uma manta"],
+ ["O menino está contente.","O menino está contente?","o menino está contente.","O menino está contente"],
+ ["Eles cantaram uma canção.","Eles cantaram uma canção?","eles cantaram uma canção.","Eles cantaram uma canção"],
+ ["A Laura gosta muito da avó.","A laura gosta muito da avó.","A Laura gosta muito da avó?","a Laura gosta muito da avó."],
+ ["Hoje está muito frio.","Hoje está muito frio?","hoje está muito frio.","Hoje está muito frio"],
+ ["A professora leu um poema.","A professora leu um poema?","a professora leu um poema.","A professora leu um poema"],
+ ["Onde está a minha mochila?","Onde está a minha mochila.","onde está a minha mochila?","Onde está a minha mochila"],
+ ["Que dia tão bonito!","Que dia tão bonito","que dia tão bonito!","Que dia tão bonito?"],
+ ["Comprei pão, leite e fruta.","Comprei pão leite e fruta.","Comprei pão, leite, e fruta.","Comprei, pão, leite e fruta."],
+ ["Na mochila tenho lápis, borracha e cadernos.","Na mochila tenho lápis borracha e cadernos.","Na mochila tenho lápis, borracha, e cadernos.","Na mochila, tenho lápis borracha e cadernos."],
+ ["Quantos anos tens?","Quantos anos tens.","quantos anos tens?","Quantos anos tens!"],
+ ["O Duarte comeu uma maçã.","O duarte comeu uma maçã.","O Duarte comeu uma maçã?","O Duarte comeu uma maçã"],
+ ["A Rita foi ao parque com o pai.","a Rita foi ao parque com o pai.","A rita foi ao parque com o pai.","A Rita foi ao parque com o pai"],
+ ["Gostas de gelado de morango?","Gostas de gelado de morango.","gostas de gelado de morango?","Gostas de gelado de morango"],
+ ["Que medo tive do trovão!","Que medo tive do trovão","que medo tive do trovão!","Que medo tive do trovão?"],
+ ["No jardim há rosas, tulipas e margaridas.","No jardim há rosas tulipas e margaridas.","No jardim há rosas, tulipas, e margaridas.","No jardim, há rosas tulipas e margaridas."],
+ ["O Pedro tem um cão e um gato.","O pedro tem um cão e um gato.","O Pedro tem um cão e um gato?","o Pedro tem um cão e um gato."],
+ ["A que horas começa o filme?","A que horas começa o filme.","a que horas começa o filme?","A que horas começa o filme"],
+ ["Que bonito é o arco-íris!","Que bonito é o arco-íris","que bonito é o arco-íris!","Que bonito é o arco-íris?"],
+ ["Na feira comprei maçãs, peras e uvas.","Na feira comprei maçãs peras e uvas.","Na feira comprei maçãs, peras, e uvas.","Na feira comprei, maçãs, peras e uvas."],
+ ["Lisboa é a capital de Portugal.","lisboa é a capital de Portugal.","Lisboa é a capital de portugal.","Lisboa é a capital de Portugal?"],
+ ["Onde puseste o meu caderno?","Onde puseste o meu caderno.","onde puseste o meu caderno?","Onde puseste o meu caderno!"],
+ ["A minha cor preferida é o azul.","A minha cor preferida é o azul?","a minha cor preferida é o azul.","A minha cor preferida é o azul"],
+ ["As crianças brincam no recreio.","as crianças brincam no recreio.","As crianças brincam no recreio?","As crianças brincam no recreio"],
+ ["Que golo tão bonito!","Que golo tão bonito.","que golo tão bonito!","Que golo tão bonito?"]
+];
+G.frase=()=>{const f=pick(FRASES);return mc("Português","Qual é a frase com a <b>pontuação certa</b>?",f[0],f.slice(1),`A frase certa é: «${f[0]}» Lembra-te da letra maiúscula no início e do sinal certo no fim.`,{speak:"Qual é a frase com a pontuação certa?"})};
+const FALTA=[["Gostas de chocolate","?"],["Como te chamas","?"],["Onde moras","?"],["Que horas são","?"],["Vens brincar comigo","?"],["Quem é a tua professora","?"],
+ ["Que dia tão bonito","!"],["Que susto","!"],["Boa, ganhámos o jogo","!"],["Que bolo tão delicioso","!"],["Socorro","!"],
+ ["O gato dorme no sofá","."],["Hoje fui à praia","."],["A Clara tem um cão","."],["O sol nasce de manhã","."],["Eu gosto de ler livros","."],["Já fizeste os trabalhos de casa","?"],["Queres um copo de água","?"],["Porque estás triste","?"],["Que frio está hoje","!"],["Parabéns pelo teu aniversário","!"],["Que lindo desenho","!"],["A Rita lê um livro","."],["Amanhã vou ao cinema","."],["O comboio chegou atrasado","."],["Os pássaros cantam na árvore","."]];
+const SINAIS={".":"ponto final","?":"ponto de interrogação","!":"ponto de exclamação"};
+G.falta=()=>{const[f,sg]=pick(FALTA);const why={".":"A frase conta uma coisa, por isso acaba com ponto final.","?":"É uma pergunta, por isso leva ponto de interrogação.","!":"Mostra espanto, alegria ou susto, por isso leva ponto de exclamação."}[sg];
+ return Object.assign(mc("Português",`Que sinal falta no fim da frase?<div class="poem" style="font-style:normal">${f} <b>__</b></div>`,sg,[".","?","!"].filter(x=>x!==sg),`${why} «${f}${sg}»`,{speak:"Que sinal falta no fim da frase? "+f,optBig:true}),{options:[".","?","!"],tf:true,three:true})};
+const SINALQ=[
+ ()=>mc("Português","Que sinal usamos no fim de uma <b>pergunta</b>?","? ponto de interrogação",[". ponto final","! ponto de exclamação",", vírgula"],"Nas perguntas usamos o <b>ponto de interrogação (?)</b>."),
+ ()=>mc("Português","Que sinal usamos para mostrar <b>espanto, alegria ou susto</b>?","! ponto de exclamação",[". ponto final","? ponto de interrogação",", vírgula"],"Usamos o <b>ponto de exclamação (!)</b>."),
+ ()=>mc("Português","Que sinal usamos no fim de uma frase que <b>conta ou informa</b>?",". ponto final",["? ponto de interrogação","! ponto de exclamação",", vírgula"],"Usamos o <b>ponto final (.)</b>."),
+ ()=>mc("Português","Que sinal usamos para <b>separar palavras numa lista</b>? (ex.: pão, leite e fruta)",", vírgula",[". ponto final","? ponto de interrogação","! ponto de exclamação"],"Numa lista separamos as palavras com <b>vírgula (,)</b>. Antes do «e» não se põe vírgula."),
+ ()=>mc("Português","Depois de um ponto final, a palavra seguinte começa com…","letra maiúscula",["letra minúscula","um número","uma vírgula"],"Depois do ponto final começa uma frase nova, com <b>letra maiúscula</b>.")
+];
+G.sinal=()=>pick(SINALQ)();
+
+/* Classificação quanto ao número de sílabas */
+const PAL=[
+ ["pão"],["sol"],["mar"],["flor"],["luz"],["pé"],["mãe"],["céu"],["sal"],["cão"],
+ ["ca","sa"],["ga","to"],["bo","la"],["me","sa"],["li","vro"],["por","ta"],["lá","pis"],["den","te"],["sa","po"],["fo","lha"],
+ ["ja","ne","la"],["es","co","la"],["bo","ne","ca"],["sa","pa","to"],["ca","va","lo"],["me","ni","no"],["pa","ne","la"],["to","ma","te"],["ca","ne","ta"],["ca","ra","col"],
+ ["pi","ja","ma"],["ba","na","na"],["ca","mi","sa"],["me","ni","na"],["pe","pi","no"],["ga","li","nha"],["co","zi","nha"],["chu","pe","ta"],["sa","la","da"],["ma","ca","co"],["co","ru","ja"],["fa","ri","nha"],["de","se","nho"],["mo","chi","la"],["ca","der","no"],["fu","te","bol"],["chi","ne","lo"],
+ ["bor","bo","le","ta"],["jar","di","nei","ro"],["bi","ci","cle","ta"],["cho","co","la","te"],["te","le","vi","são"],["te","le","fo","ne"],["a","bó","bo","ra"],["ma","te","má","ti","ca"],["ma","ri","po","sa"]
+];
+const CLS=["","monossílabo","dissílabo","trissílabo","polissílabo"];
+const cls=w=>CLS[Math.min(w.length,4)];
+const CLSX="1 sílaba = monossílabo · 2 = dissílabo · 3 = trissílabo · 4 ou mais = polissílabo.";
+G.silabas=()=>{
+  const w=pick(PAL),word=w.join(""),k=r(3);
+  if(k===0)return mc("Português",`Quantas sílabas tem a palavra <b>${word}</b>?`,w.length,[1,2,3,4,5].filter(x=>x!==w.length),`${w.join("-")} → <b>${w.length}</b> sílaba${w.length>1?"s":""}.`);
+  if(k===1)return mc("Português",`Classifica a palavra <b>${word}</b> quanto ao número de sílabas.`,cls(w),CLS.slice(1),`${w.join("-")} tem ${w.length} sílaba${w.length>1?"s":""}: é um <b>${cls(w)}</b>. ${CLSX}`);
+  const alvo=rr(1,4),certa=pick(PAL.filter(x=>Math.min(x.length,4)===alvo)),outras=shuffle(PAL.filter(x=>Math.min(x.length,4)!==alvo)).slice(0,6).map(x=>x.join(""));
+  return mc("Português",`Qual destas palavras é um <b>${CLS[alvo]}</b>?`,certa.join(""),outras,`${certa.join("-")} tem ${certa.length} sílaba${certa.length>1?"s":""}. ${CLSX}`);
+};
+
+/* Translineação */
+const TRL=PAL.filter(w=>w.length>=3&&w[0].length>1);
+G.trans=()=>{
+  if(r(5)===0)return mc("Português","Quando uma palavra não cabe no fim da linha, divide-se…","pelas sílabas, com um hífen (-)",["em qualquer letra","ao meio, sem hífen","só na última letra"],"Na translineação, a palavra divide-se <b>pelas sílabas</b> e põe-se um <b>hífen (-)</b> no fim da linha.");
+  const w=pick(TRL),word=w.join(""),bounds=[];let acc=0;w.slice(0,-1).forEach(sy=>{acc+=sy.length;bounds.push(acc)});
+  const b=pick(bounds),fmt=i=>`${word.slice(0,i)}- | ${word.slice(i)}`;
+  const bad=[];for(let i=1;i<word.length;i++)if(!bounds.includes(i))bad.push(fmt(i));
+  return mc("Português",`A palavra <b>${word}</b> não cabe no fim da linha. Qual é a divisão <b>correta</b>?`,fmt(b),bad,`${word} divide-se assim: ${w.join("-")}. Só podemos cortar entre sílabas.`,{speak:`A palavra ${word} não cabe no fim da linha. Qual é a divisão correta?`});
+};
+
+/* Poema: verso, estrofe, quadra, terceto */
+const POEMA=[["A minha avó faz tricô","com um novelo de lã.","Conta histórias ao serão","e acorda cedo de manhã."],["O relógio faz tic-tac,","o tempo não para de andar,","e eu cresço sem reparar."]];
+const POEMA3=[["Na escola do Cavaco","há meninos a cantar,","leem, contam e escrevem","e gostam de brincar."],["No recreio há alegria,","correm todos sem parar,","até o sino tocar."]];
+const POEMA4=[["A chuva cai no telhado,","faz plim, plim sem parar,","e o gato está deitado."],["Quando o sol voltar a brilhar,","vou correr para o quintal,","saltar poças a cantar","e brincar com o meu pardal."]];
+const POEMA2=[["No céu brilha uma estrela,","lá no alto, a cintilar.","Vejo-a da minha janela","antes de me ir deitar."],["De manhã ela some,","mas à noite volta a brilhar."]];
+function poemaHTML(P,mark){ // mark: {e:índice estrofe} ou {e,v}
+  return `<div class="poem">`+P.map((st,ei)=>{
+    const lines=st.map((l,vi)=>(mark.v===undefined&&mark.e===ei)||(mark.e===ei&&mark.v===vi)?`<u class="hl">${l}</u>`:l).join("<br>");
+    return lines}).join('<div style="height:14px"></div>')+`</div>`;
+}
+G.poema=()=>{
+  const P=pick([POEMA,POEMA2,POEMA3,POEMA4]),k=r(5),T=t=>t===4?"quadra":t===3?"terceto":"estrofe de "+t+" versos";
+  if(k===0){const e=r(P.length),v=r(P[e].length);return mc("Português","O que está <b>sublinhado</b> no poema?","um verso",["uma estrofe","uma rima","um título"],"Cada linha do poema é um <b>verso</b>.",{vis:poemaHTML(P,{e,v})})}
+  if(k===1){const e=r(P.length);return mc("Português","O que está <b>sublinhado</b> no poema?","uma estrofe",["um verso","uma rima","um título"],"Um conjunto de versos é uma <b>estrofe</b>. Entre duas estrofes há uma linha em branco.",{vis:poemaHTML(P,{e})})}
+  if(k===2){const e=P.findIndex(st=>st.length===4||st.length===3)>=0?pick(P.map((st,i)=>i).filter(i=>P[i].length===4||P[i].length===3)):0;
+    return mc("Português","A estrofe <b>sublinhada</b> é…",T(P[e].length),["quadra","terceto","verso"].filter(x=>x!==T(P[e].length)),`Tem ${P[e].length} versos: é um <b>${T(P[e].length)}</b>. 4 versos = quadra · 3 versos = terceto.`,{vis:poemaHTML(P,{e})})}
+  if(k===3){const n=P.reduce((t,st)=>t+st.length,0);return mc("Português","Quantos <b>versos</b> tem este poema?",n,[n-1,n+1,P.length,n+2],`Conta as linhas: o poema tem <b>${n} versos</b>.`,{vis:poemaHTML(P,{})})}
+  return mc("Português","Quantas <b>estrofes</b> tem este poema?",P.length,[1,3,4,P.reduce((t,st)=>t+st.length,0)].filter(x=>x!==P.length),`Há uma linha em branco a separar: o poema tem <b>${P.length} estrofes</b>.`,{vis:poemaHTML(P,{})});
+};
+const DEF=[
+ ()=>mc("Português","Uma estrofe com <b>quatro</b> versos chama-se…","quadra",["terceto","verso","rima"],"Estrofe de 4 versos = <b>quadra</b>."),
+ ()=>mc("Português","Uma estrofe com <b>três</b> versos chama-se…","terceto",["quadra","verso","rima"],"Estrofe de 3 versos = <b>terceto</b>."),
+ ()=>mc("Português","Cada linha de um poema chama-se…","verso",["estrofe","quadra","parágrafo"],"Cada linha de um poema é um <b>verso</b>."),
+ ()=>mc("Português","Um conjunto de versos chama-se…","estrofe",["verso","terceto","título"],"Um conjunto de versos forma uma <b>estrofe</b>.")
+];
+G.def=()=>pick(DEF)();
+
+/* ----- MATEMÁTICA ----- */
+G.extenso=()=>{
+  const n=niceNum(),ok=ext(n);
+  return mc("Matemática","Qual está <b>bem escrito</b>?",ok,misspells(ok),`${n} escreve-se «${ok}». Lê cada palavra com atenção!`,{big:String(n),speak:"Qual está bem escrito?"});
+};
+G.extensoFrase=()=>{
+  const n=niceNum(),ok=ext(n),f=x=>`O número ${n} lê-se ${x}.`;
+  return mc("Matemática","Qual é a frase <b>bem escrita</b>?",f(ok),misspells(ok).map(f),`A frase certa é: «${f(ok)}»`,{big:String(n),speak:"Qual é a frase bem escrita?"});
+};
+G.extensoRev=()=>{
+  const n=niceNum(),c=Math.floor(n/100),d=Math.floor(n/10)%10,u=n%10,w=[];
+  w.push(c*100+u*10+d, u*100+d*10+c, d*100+c*10+u, n+10, n-10, n+100<1000?n+100:n-100);
+  return mc("Matemática",`Qual é o número?<br><span style="font-size:24px;color:var(--accent)">«${ext(n)}»</span>`,n,w.filter(x=>x>=100&&x<1000&&x!==n),`«${ext(n)}» escreve-se ${n}.`,{speak:"Qual é o número? "+ext(n)});
+};
+G.valor=()=>{
+  let n;do{n=rr(111,999)}while(new Set(String(n)).size<3||String(n).includes("0"));
+  const s=String(n),pos=r(3),dig=+s[pos],val=dig*[100,10,1][pos],nome=["centenas","dezenas","unidades"][pos];
+  return mc("Matemática",`No número <b>${n}</b>, qual é o valor do algarismo <b>${dig}</b>?`,val,[dig,dig*10,dig*100,dig*1000].filter(x=>x!==val),`O ${dig} está nas ${nome}, por isso vale <b>${val}</b>.`);
+};
+G.decomp=()=>{
+  let n;do{n=rr(111,999)}while(new Set(String(n)).size<3||String(n).includes("0"));
+  const [c,d,u]=String(n).split("").map(Number);
+  if(r(2)){
+    const f=(a,b,e)=>`${a} centenas, ${b} dezenas e ${e} unidades`;
+    return mc("Matemática",`Como se decompõe o número <b>${n}</b>?`,f(c,d,u),[f(d,c,u),f(u,d,c),f(c,u,d)],`${n} = <b>${c} centenas</b>, <b>${d} dezenas</b> e <b>${u} unidades</b>.`);
+  }
+  const f=(a,b,e)=>`${a} + ${b} + ${e}`;
+  return mc("Matemática",`<b>${n}</b> é igual a…`,f(c*100,d*10,u),[f(c,d,u),f(d*100,c*10,u),f(c*100,u*10,d)],`${n} = ${c*100} + ${d*10} + ${u}.`);
+};
+function numWrongs(c,d,u){const n=c*100+d*10+u;return[c*100+u*10+d,d*100+c*10+u,u*100+d*10+c,n+10,n-1,n+1].filter(x=>x!==n&&x>0)}
+G.mab=()=>{
+  const c=rr(1,3),d=rr(0,6),u=rr(1,9),n=c*100+d*10+u;
+  return mc("Matemática","Que número está representado com o <b>MAB</b>?",n,numWrongs(c,d,u),`${c} placa${c>1?"s":""} = ${c*100} · ${d} barra${d!==1?"s":""} = ${d*10} · ${u} cubinho${u>1?"s":""} = ${u}. Ao todo: <b>${n}</b>.`,{vis:`<div class="vis">${svgMAB(c,d,u)}</div>`,speak:"Que número está representado com o MAB? A placa vale cem, a barra vale dez e o cubinho vale um."});
+};
+G.abaco=()=>{
+  const c=rr(1,9),d=rr(0,9),u=rr(0,9),n=c*100+d*10+u;
+  return mc("Matemática","Que número está no <b>ábaco</b>?",n,numWrongs(c,d,u),`C = ${c} centenas, D = ${d} dezenas, U = ${u} unidades. O número é <b>${n}</b>.`,{vis:`<div class="vis">${svgAbaco(c,d,u)}</div>`});
+};
+G.ordenarNum=()=>{
+  const s=new Set();const base=rr(1,8)*100;while(s.size<4)s.add(r(2)?base+rr(0,99):rr(100,999));
+  const a=[...s].sort((x,y)=>x-y),desc=r(2);
+  return order("Matemática",`Ordena do <b>${desc?"maior":"menor"}</b> para o <b>${desc?"menor":"maior"}</b>.`,desc?a.reverse():a,"Compara primeiro as centenas, depois as dezenas e por fim as unidades.");
+};
+G.ordinal=()=>{
+  const n=ordNum(),ok=ord(n),d=Math.floor(n/10),u=n%10,w=[ext(n)];
+  if(u)w.push(O1[u]+" "+O10[d]);
+  const nd=d+(d<9&&d!==6?1:-1);if(nd!==7)w.push(ord(nd*10+u));
+  if(u)w.push(ord(d*10+(u%9)+1));
+  return mc("Matemática","Como se lê este número ordinal?",ok,w,`${n}.º lê-se «${ok}».`,{big:n+".º",speak:"Como se lê este número ordinal?"});
+};
+G.ordinalRev=()=>{
+  const n=ordNum(),d=Math.floor(n/10),u=n%10,w=[];
+  if(u)w.push(u*10+d+".º"); w.push((n+10<100&&Math.floor((n+10)/10)!==7?n+10:n-10)+".º",(u?n-u+((u%9)+1):n+1)+".º",n+".");
+  return mc("Matemática",`Como se escreve com algarismos?<br><span style="font-size:24px;color:var(--accent)">«${ord(n)}»</span>`,n+".º",w,`«${ord(n)}» escreve-se <b>${n}.º</b> — não te esqueças do «º».`,{speak:"Como se escreve com algarismos? "+ord(n)});
+};
+G.fila=()=>{
+  const nome=pick(ALUNOS),k=rr(2,9),art=["Amanda","Clara"].includes(nome)?"a":"o";
+  if(r(2))return mc("Matemática",`Numa fila, ${art} ${nome} está em <b>${k}.º lugar</b>. Quantos meninos estão à frente?`,k-1,[k,k+1,k-2].filter(x=>x>=0),`Se está em ${k}.º lugar, há <b>${k-1}</b> meninos à frente.`);
+  return mc("Matemática",`Numa corrida, ${art} ${nome} chegou logo a seguir ao ${k}.º. Em que lugar chegou?`,(k+1)+".º",[k+".º",(k-1)+".º",(k+2)+".º"],`Logo a seguir ao ${ord(k)} vem o <b>${ord(k+1)}</b> (${k+1}.º).`);
+};
+G.ordenarOrd=()=>{
+  const s=new Set();while(s.size<4)s.add(rr(1,12));const a=[...s].sort((x,y)=>x-y);
+  const w=a.map(n=>n<10?O1[n]:ord(n));
+  return order("Matemática","Ordena do <b>primeiro</b> para o <b>último</b>.",w,a.map(n=>`${n}.º`).join(" → "));
+};
+G.relogio=()=>{
+  const h=rr(1,12),m=rr(0,11)*5,ok=hm(h,m),w=[];
+  const hh=m/5||12,mm=(h%12)*5;w.push(hm(hh,mm));
+  w.push(hm(h%12+1,m),hm(h===1?12:h-1,m),hm(h,(m+30)%60),hm(h,(m+15)%60));
+  return mc("Matemática","Que horas marca o relógio?",ok,w,`O ponteiro <b style="color:#E0483E">pequeno (vermelho)</b> mostra as horas e o <b style="color:#2F6FD6">grande (azul)</b> mostra os minutos. São <b>${ok}</b>.`,{vis:`<div class="vis">${svgRelogio(h,m)}</div>`});
+};
+const EQUIV=[["1 hora","60 minutos",["100 minutos","30 minutos","24 minutos"]],["meia hora","30 minutos",["50 minutos","15 minutos","60 minutos"]],["um quarto de hora","15 minutos",["25 minutos","4 minutos","45 minutos"]],["três quartos de hora","45 minutos",["34 minutos","30 minutos","75 minutos"]],["1 minuto","60 segundos",["100 segundos","10 segundos","30 segundos"]],["2 horas","120 minutos",["200 minutos","60 minutos","102 minutos"]],["1 dia","24 horas",["12 horas","60 horas","7 horas"]]];
+G.equiv=()=>{const e=pick(EQUIV);return mc("Matemática",`<b>${e[0]}</b> tem…`,e[1],e[2],`${e[0]} = <b>${e[1]}</b>.`)};
+G.depois=()=>{
+  const h=rr(8,17),m=pick([0,15,30]),add=pick([[15,"um quarto de hora"],[30,"meia hora"],[60,"uma hora"]]);
+  const t=h*60+m+add[0],ok=hm(Math.floor(t/60),t%60);
+  const w=[hm(Math.floor((t+15)/60),(t+15)%60),hm(Math.floor((t-15)/60),(t-15)%60),hm(h,(m+add[0]===60?0:m+add[0])%60),hm(h+1,(m+add[0])%60)];
+  return mc("Matemática",`São <b>${hm(h,m)}</b>. Que horas serão daqui a <b>${add[1]}</b>?`,ok,w,`${hm(h,m)} + ${add[1]} = <b>${ok}</b>.`);
+};
+const HORARIO=[
+ ()=>mc("Matemática","As aulas começam às <b>8:45</b> e o intervalo começa às <b>10:45</b>. Quanto tempo de aulas há antes do intervalo?","2 horas",["1 hora","3 horas","2 horas e meia"],"Das 8:45 às 10:45 passam <b>2 horas</b>."),
+ ()=>mc("Matemática","O intervalo é das <b>10:45</b> às <b>11:15</b>. Quanto tempo dura?","30 minutos",["15 minutos","1 hora","45 minutos"],"Das 10:45 às 11:15 passam <b>30 minutos</b> (meia hora)."),
+ ()=>mc("Matemática","O almoço começa às <b>12:15</b> e acaba às <b>13:30</b>. Quanto tempo dura?","1 hora e 15 minutos",["1 hora","1 hora e 30 minutos","45 minutos"],"Das 12:15 às 13:15 é 1 hora, e até às 13:30 são mais 15 minutos: <b>1 hora e 15 minutos</b>."),
+ ()=>mc("Matemática","As aulas da tarde vão das <b>13:30</b> às <b>15:30</b>. Quanto tempo duram?","2 horas",["1 hora","3 horas","1 hora e 30 minutos"],"Das 13:30 às 15:30 passam <b>2 horas</b>.")
+];
+G.horario=()=>pick(HORARIO)();
+
+/* ----- ESTUDO DO MEIO ----- */
+const TEMPO=[
+ ()=>mc("Estudo do Meio","Uma <b>década</b> tem…","10 anos",["100 anos","12 anos","1000 anos"],"Uma década = <b>10 anos</b>."),
+ ()=>mc("Estudo do Meio","Um <b>século</b> tem…","100 anos",["10 anos","1000 anos","50 anos"],"Um século = <b>100 anos</b>."),
+ ()=>mc("Estudo do Meio","Um <b>milénio</b> tem…","1000 anos",["100 anos","10 anos","10 000 anos"],"Um milénio = <b>1000 anos</b>."),
+ ()=>mc("Estudo do Meio","Um século tem quantas <b>décadas</b>?","10",["100","12","5"],"100 anos ÷ 10 = <b>10 décadas</b>."),
+ ()=>mc("Estudo do Meio","Um milénio tem quantos <b>séculos</b>?","10",["100","1000","5"],"1000 anos ÷ 100 = <b>10 séculos</b>."),
+ ()=>{const k=rr(2,9);return mc("Estudo do Meio",`<b>${k} décadas</b> são quantos anos?`,k*10+" anos",[k+" anos",k*100+" anos",(k+1)*10+" anos"],`Cada década tem 10 anos: ${k} × 10 = <b>${k*10} anos</b>.`)},
+ ()=>{const k=rr(2,5);return mc("Estudo do Meio",`<b>${k} séculos</b> são quantos anos?`,k*100+" anos",[k*10+" anos",k*1000+" anos",(k+1)*100+" anos"],`Cada século tem 100 anos: ${k} × 100 = <b>${k*100} anos</b>.`)},
+ ()=>{const k=rr(2,3);return mc("Estudo do Meio",`<b>${k} milénios</b> são quantos anos?`,k*1000+" anos",[k*100+" anos",k*10+" anos",(k+1)*1000+" anos"],`Cada milénio tem 1000 anos: ${k} × 1000 = <b>${k*1000} anos</b>.`)},
+ ()=>mc("Estudo do Meio","Em que século estamos?","século 21",["século 20","século 19","século 2026"],"Estamos no <b>século 21</b>.")
+];
+G.tempo=()=>pick(TEMPO)();
+const LOCAL=[
+ ()=>mc("Estudo do Meio","O <b>foral</b> era…","um documento com os direitos e deveres dos habitantes",["uma coluna de pedra na praça","um castelo antigo","uma festa da terra"],"O foral era uma carta que o rei dava a uma terra, com os <b>direitos e deveres</b> de quem lá vivia."),
+ ()=>mc("Estudo do Meio","Quem dava o <b>foral</b> a uma terra?","o rei",["o professor","o padeiro","os meninos"],"O foral era dado pelo <b>rei</b> (ou por um senhor importante)."),
+ ()=>mc("Estudo do Meio","O <b>pelourinho</b> é…","uma coluna de pedra",["um documento do rei","uma fonte de água","uma ponte"],"O pelourinho é uma <b>coluna de pedra</b> que fica numa praça."),
+ ()=>mc("Estudo do Meio","O pelourinho era símbolo de que…","a terra era um concelho com poder próprio",["a terra tinha um rio","ali morava o rei","ali havia uma escola"],"O pelourinho mostrava que a terra era um <b>concelho</b>, com autoridade própria."),
+ ()=>tf("Estudo do Meio","O pelourinho é feito de pedra.",true,"Verdadeiro! O pelourinho é uma coluna de <b>pedra</b>."),
+ ()=>tf("Estudo do Meio","O foral era um jogo antigo.",false,"Falso! O foral era um <b>documento</b> com direitos e deveres."),
+ ()=>tf("Estudo do Meio","Junto ao pelourinho eram castigadas as pessoas que não cumpriam as regras.",true,"Verdadeiro! Era lá que se aplicavam castigos e se davam avisos à população."),
+ ()=>tf("Estudo do Meio","O foral dizia quais eram os direitos e deveres dos habitantes.",true,"Verdadeiro!"),
+ ()=>tf("Estudo do Meio","O pelourinho servia para guardar água.",false,"Falso! Era um símbolo do poder do concelho."),
+ ()=>mc("Estudo do Meio","Onde ficava normalmente o pelourinho?","na praça principal da terra",["no meio do rio","no cimo da serra","dentro de uma casa"],"O pelourinho ficava na <b>praça principal</b>, perto da câmara."),
+ ()=>mc("Estudo do Meio","Para que servia o pelourinho?","para castigar quem não cumpria as regras",["para guardar cereais","para ver as horas","para os meninos brincarem"],"Junto ao pelourinho eram <b>castigadas</b> as pessoas que não cumpriam as regras."),
+ ()=>mc("Estudo do Meio","Um <b>concelho</b> é…","uma terra com o seu próprio governo",["uma casa do rei","um rio grande","uma igreja"],"Um concelho é uma terra que se <b>governa a si própria</b>, com a sua câmara."),
+ ()=>mc("Estudo do Meio","O foral dizia que <b>impostos</b>…","os habitantes tinham de pagar",["o rei tinha de pagar","os animais tinham de pagar","ninguém pagava"],"O foral dizia os direitos e deveres dos habitantes, como os <b>impostos a pagar</b>."),
+ ()=>tf("Estudo do Meio","O foral dava a uma terra autorização para se governar.",true,"Verdadeiro! Com o foral, a terra passava a ser um <b>concelho</b>."),
+ ()=>tf("Estudo do Meio","O pelourinho é uma estátua de um rei.",false,"Falso! O pelourinho é uma <b>coluna de pedra</b>."),
+ ()=>tf("Estudo do Meio","O foral era dado pelos meninos da escola.",false,"Falso! O foral era dado pelo <b>rei</b>."),
+ ()=>tf("Estudo do Meio","Ainda hoje podemos ver pelourinhos em muitas terras de Portugal.",true,"Verdadeiro! Muitas terras ainda têm o seu pelourinho na praça."),
+ ()=>tf("Estudo do Meio","O pelourinho era símbolo de que a terra era um concelho.",true,"Verdadeiro! Mostrava a <b>autoridade</b> do concelho."),
+ ()=>tf("Estudo do Meio","O pelourinho era feito de papel.",false,"Falso! O pelourinho é de <b>pedra</b>. De papel (ou pergaminho) era o foral."),
+ ()=>tf("Estudo do Meio","Junto ao pelourinho também se davam avisos à população.",true,"Verdadeiro! Era um sítio onde se anunciavam as decisões."),
+ ()=>tf("Estudo do Meio","O foral dizia os deveres dos habitantes.",true,"Verdadeiro! O foral tinha os <b>direitos e deveres</b>.")
+];
+G.local=()=>pick(LOCAL)();
+
+/* ----- NÚMEROS ROMANOS ----- */
+const SIMB=[["I",1],["V",5],["X",10],["L",50],["C",100]];
+G.romSimb=()=>{const[s,v]=pick(SIMB);return mc("Números romanos",`Quanto vale o símbolo <b>${s}</b>?`,v,SIMB.map(x=>x[1]).concat([2,1000]),`<b>${s}</b> = ${v}.`,{big:s,speak:"Quanto vale este símbolo romano?",help:true})};
+function romRange(lvl){return lvl===0?rr(1,10):lvl===1?rr(4,30):rr(11,60)}
+G.romLer=(lvl=2)=>{
+  let n=romRange(lvl);if(r(3)===0){const sp=[4,9,14,19,24,29,40,44,49].filter(x=>lvl?true:x<=10);n=pick(sp)}
+  const s=rom(n),w=[romAdd(s),n+1,n-1,n+5,n-5,n+10].filter(x=>x>0&&x!==n);
+  return mc("Números romanos","Que número é este?",n,w,`${explicaRom(s)} = <b>${n}</b>.`,{big:s,speak:"Que número romano é este?",help:true});
+};
+G.romEscrever=(lvl=2)=>{
+  let n=romRange(lvl);if(r(2)){const sp=[4,9,14,19,24,29,39,40,44,49].filter(x=>lvl?true:x<=10);n=pick(sp)}
+  return mc("Números romanos",`Como se escreve <b>${n}</b> em números romanos?`,rom(n),romWrongs(n),`${n} = <b>${rom(n)}</b> (${explicaRom(rom(n))}).`,{help:true,optBig:true});
+};
+G.romSeculo=()=>{
+  const n=rr(12,21),s=rom(n);
+  return mc("Números romanos",`O <b>século ${s}</b> é o século número…`,n,[romAdd(s),n+1,n-1,n+10].filter(x=>x!==n),`${explicaRom(s)} = ${n}. É o <b>século ${n}</b>.`,{help:true});
+};
+G.romOrdenar=(lvl=2)=>{
+  const s=new Set();while(s.size<4)s.add(romRange(lvl));const a=[...s].sort((x,y)=>x-y);
+  return order("Números romanos","Ordena do <b>menor</b> para o <b>maior</b>.",a.map(rom),a.map(n=>`${rom(n)} = ${n}`).join(" · "),{help:true});
+};
+function explicaRom(s){
+  const val={I:1,V:5,X:10,L:50,C:100},p=[];
+  for(let i=0;i<s.length;i++){const a=val[s[i]],b=val[s[i+1]]||0;if(a<b){p.push(`(${b} − ${a})`);i++}else p.push(String(a))}
+  return p.length>1?p.join(" + "):p[0];
+}
+
+/* ---------- temas ---------- */
+const TEMAS={
+ por:{nome:"Português",ic:"📖",cor:"var(--por)",desc:"Sílabas, translineação, poemas e pontuação",gen:[[G.silabas,3],[G.trans,2],[G.poema,3],[G.def,1],[G.falta,2],[G.frase,1],[G.sinal,1]]},
+ mat:{nome:"Matemática",ic:"🔢",cor:"var(--mat)",desc:"Números, MAB, ábaco, ordinais e horas",gen:[[G.extenso,3],[G.extensoFrase,2],[G.extensoRev,1],[G.valor,1],[G.decomp,1],[G.mab,1],[G.abaco,1],[G.ordenarNum,1],[G.ordinal,1],[G.ordinalRev,1],[G.fila,1],[G.ordenarOrd,1],[G.relogio,2],[G.equiv,1],[G.depois,1],[G.horario,1]]},
+ em:{nome:"Estudo do Meio",ic:"🌍",cor:"var(--em)",desc:"Década, século, milénio, foral e pelourinho",gen:[[G.tempo,5],[G.local,4]]},
+ rom:{nome:"Números romanos",ic:"🏛️",cor:"var(--rom)",desc:"Aprende I, V, X, L e C passo a passo"},
+ mix:{nome:"Mistura de tudo",ic:"🎲",cor:"var(--mix)",desc:"Um bocadinho de cada matéria"}
+};
+function wpick(list){const t=list.reduce((s,x)=>s+x[1],0);let k=Math.random()*t;for(const[f,w]of list){if((k-=w)<0)return f}return list[0][0]}
+function gerar(t){
+  const qs=[],seen=new Set();let guard=0;
+  const add=q=>{const key=q.prompt+"|"+(q.big||"")+"|"+(q.vis||"")+"|"+q.answer+"|"+(q.items||[]).join();if(seen.has(key)||guard++>400)return false;seen.add(key);qs.push(q);return true};
+  if(t==="rom"){
+    const plan=[()=>G.romSimb(),()=>G.romSimb(),()=>G.romLer(0),()=>G.romEscrever(0),()=>G.romLer(1),()=>G.romOrdenar(0),()=>G.romEscrever(1),()=>G.romLer(2),()=>G.romSeculo(),()=>pick([()=>G.romOrdenar(1),()=>G.romEscrever(2),()=>G.romSeculo()])()];
+    for(const f of plan){while(!add(f())&&guard<400);}
+    return qs;
+  }
+  if(t==="mix"){
+    const pool=[[G.silabas,1],[G.trans,1],[G.poema,1],[G.falta,1],[G.frase,1],[G.extenso,2],[G.extensoFrase,1],[G.mab,1],[G.abaco,1],[G.ordinal,1],[G.relogio,1],[G.depois,1],[G.tempo,2],[G.local,1],[G.ordenarNum,1],[G.decomp,1]];
+    while(qs.length<10&&guard<400)add(wpick(pool)());
+    return qs;
+  }
+  while(qs.length<10&&guard<400)add(wpick(TEMAS[t].gen)());
+  return qs;
+}
+
+/* ---------- estado ---------- */
+let aluno=null,tema=null,Q=[],idx=0,certas=0,erradas=[],answered=false,placed=[];
+let store={};
+try{store=JSON.parse(localStorage.getItem("tpc3a")||"{}")}catch(e){store={}}
+function save(){try{localStorage.setItem("tpc3a",JSON.stringify(store))}catch(e){}}
+
+function calar(){try{speechSynthesis.cancel()}catch(e){}}
+function go(id){calar();document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id===id));window.scrollTo(0,0);if(id==="sTemas")drawTemas()}
+function drawNomes(){
+  $("nomes").innerHTML=ALUNOS.map(n=>`<button class="btn name" onclick="escolher('${n}')">${n}</button>`).join("");
+}
+function escolher(n){aluno=n;store.nome=n;save();$("ola").textContent="Olá, "+n+"! 👋";go("sTemas")}
+function estrelas(s){return s>=9?"⭐⭐⭐":s>=7?"⭐⭐":s>=5?"⭐":""}
+function drawTemas(){
+  const best=(store.best&&store.best[aluno])||{};
+  $("temas").innerHTML=Object.entries(TEMAS).map(([k,t])=>`<button class="btn tema" style="--c:${t.cor}" onclick="comecar('${k}')"><span class="ic">${t.ic}</span><span class="t">${t.nome}<small>${t.desc}</small></span><span class="st">${best[k]!=null?(estrelas(best[k])||"✔")+"<br><small>"+best[k]+"/10</small>":""}</span></button>`).join("");
+}
+function comecar(t){
+  tema=t;Q=gerar(t);idx=0;certas=0;erradas=[];
+  document.documentElement.style.setProperty("--accent",TEMAS[t].cor);
+  go("sQuiz");mostrar();
+  if(t==="rom")ajuda(true);
+}
+function ajuda(on){$("help").classList.toggle("on",on)}
+
+function mostrar(){
+  calar();const q=Q[idx];answered=false;placed=[];
+  $("bar").style.width=(idx/Q.length*100)+"%";$("cnt").textContent=(idx+1)+"/"+Q.length;
+  const tcor={"Português":"var(--por)","Matemática":"var(--mat)","Estudo do Meio":"var(--em)","Números romanos":"var(--rom)"}[q.tag];
+  $("qtag").textContent=q.tag;$("qtag").style.background=tcor;
+  $("qtxt").innerHTML=q.prompt;
+  $("qvis").innerHTML=(q.big?`<div class="big">${q.big}</div>`:"")+(q.vis||"");
+  $("bHelp").style.display=q.help?"":"none";
+  $("fb").className="fb";$("bNext").style.display="none";
+  const A=$("area");
+  if(q.type==="mc"){
+    A.innerHTML=`<div class="opts ${q.three?"tf3":q.tf?"tf":""}">`+q.options.map((o,i)=>`<button class="btn opt" style="${q.optBig?"font-size:26px;letter-spacing:1px":""}" data-i="${i}" onclick="responder(${i})">${o}</button>`).join("")+`</div>`;
+  }else{
+    q.pool=shuffle(q.items.map((t,i)=>({t,i})));
+    if(q.pool.every((p,k)=>p.i===k))q.pool.reverse();
+    A.innerHTML=`<div class="slots" id="slots"></div><div class="pool" id="pool"></div><button class="btn main" id="bCheck" disabled onclick="verificarOrdem()">Verificar ✔</button>`;
+    drawOrder();
+  }
+}
+function drawOrder(){
+  const q=Q[idx];
+  $("slots").innerHTML=q.items.map((_,k)=>{const p=placed[k];return `<div class="slot ${p?"full":""}" onclick="tirar(${k})"><span class="n">${k+1}.</span>${p?p.t:""}</div>`}).join("");
+  $("pool").innerHTML=q.pool.map((p,k)=>`<button class="chip" ${placed.includes(p)?"disabled":""} onclick="por(${k})">${p.t}</button>`).join("");
+  $("bCheck").disabled=placed.filter(Boolean).length<q.items.length;
+}
+function por(k){if(answered)return;const q=Q[idx],p=q.pool[k];if(placed.includes(p))return;const free=q.items.findIndex((_,i)=>!placed[i]);placed[free]=p;drawOrder()}
+function tirar(k){if(answered||!placed[k])return;placed[k]=undefined;drawOrder()}
+function verificarOrdem(){
+  const q=Q[idx];answered=true;calar();
+  const ok=placed.every((p,k)=>p.t===q.items[k]);
+  [...$("slots").children].forEach((el,k)=>{el.classList.remove("full");el.classList.add(placed[k].t===q.items[k]?"ok":"bad");el.onclick=null});
+  $("bCheck").style.display="none";$("pool").style.display="none";
+  feedback(ok,"A ordem certa é: <b>"+q.items.join(" → ")+"</b>",q);
+}
+function responder(i){
+  if(answered)return;answered=true;calar();
+  const q=Q[idx],ch=q.options[i],ok=ch===q.answer;
+  document.querySelectorAll(".opt").forEach(b=>{const o=q.options[+b.dataset.i];b.disabled=true;if(o===q.answer)b.classList.add("ok");else if(+b.dataset.i===i)b.classList.add("bad")});
+  feedback(ok,"A resposta certa é: <b>"+q.answer+"</b>",q);
+}
+const BOM=["Muito bem! 🎉","Boa! 👏","Certíssimo! ✨","Isso mesmo! 💪","Excelente! 🌟"];
+const MAU=["Quase! 🙂","Ups, não foi desta. 💭","Não faz mal, aprende-se assim! 🌱"];
+function feedback(ok,certa,q){
+  if(ok)certas++;else erradas.push({q,certa});
+  const f=$("fb");f.className="fb on "+(ok?"ok":"bad");
+  f.innerHTML=`<strong>${ok?pick(BOM):pick(MAU)}</strong>${ok?"":certa+"<br>"}${q.explain||""}${!ok&&q.help?ROMTIP:""}`;
+  $("bNext").style.display="block";$("bNext").textContent=idx===Q.length-1?"Ver resultado 🏁":"Seguinte ➜";
+  setTimeout(()=>$("bNext").scrollIntoView({behavior:"smooth",block:"end"}),60);
+}
+function seguinte(){idx++;if(idx<Q.length){mostrar();window.scrollTo(0,0)}else fim()}
+function fim(){
+  $("bar").style.width="100%";
+  store.best=store.best||{};store.best[aluno]=store.best[aluno]||{};
+  const b=store.best[aluno][tema];if(b==null||certas>b)store.best[aluno][tema]=certas;save();
+  const st=estrelas(certas);
+  $("stars").textContent=st||"💪";
+  $("score").textContent=certas+" em 10 certas";
+  $("fimT").textContent=certas>=9?"Fantástico, "+aluno+"!":certas>=7?"Muito bem, "+aluno+"!":certas>=5?"Bom trabalho, "+aluno+"!":"Continua a treinar, "+aluno+"!";
+  $("fimMsg").textContent=certas===10?"Acertaste em tudo! 🏆":"Joga outra vez para ganhares mais estrelas. As perguntas mudam!";
+  $("rev").innerHTML=erradas.length?`<p class="sub" style="margin:0 0 8px">Para rever:</p>`+erradas.map(e=>`<div>${e.q.prompt.replace(/<br>.*/,"")}${e.q.big?" <b>"+e.q.big+"</b>":""}<br>${e.certa}</div>`).join(""):"";
+  setSave("");go("sFim");registar();
+}
+/* ---------- guardar resultados (Firebase, com fila se não houver rede) ---------- */
+function txtCurto(h){const d=document.createElement("div");d.innerHTML=String(h).replace(/<br>/g," ").replace(/<div class="poem".*$/s,"");return d.textContent.trim().slice(0,140)}
+function registar(){
+  const rec={aluno,tema,temaNome:TEMAS[tema].nome,certas,total:Q.length,quando:new Date().toISOString(),
+    erradas:erradas.map(e=>({p:txtCurto(e.q.prompt)+(e.q.big?" "+e.q.big:""),r:txtCurto(e.certa)}))};
+  store.pend=store.pend||[];store.pend.push(rec);save();
+  setSave("⏳ A guardar o resultado…");flush();
+}
+function setSave(t){const e=$("saveSt");if(e)e.textContent=t}
+let flushing=false;
+async function flush(){
+  if(flushing||!(store.pend&&store.pend.length))return;
+  if(!window.FB){setSave("💾 Resultado guardado no telemóvel. Segue para o professor quando houver internet.");return}
+  flushing=true;
+  try{while(store.pend.length){await window.FB.save(store.pend[0]);store.pend.shift();save()}setSave("✅ O professor já recebeu o teu resultado!")}
+  catch(e){setSave("💾 Resultado guardado no telemóvel. Segue para o professor quando houver internet.")}
+  flushing=false;
+}
+window.addEventListener("fb-ready",flush);
+window.addEventListener("online",flush);
+
+/* ---------- área do professor ---------- */
+const PIN="1234";
+function abrirProf(){go("sProf");$("profIn").style.display="";$("profOut").style.display="none";$("pin").value=""}
+function entrarProf(){if($("pin").value!==PIN){alert("PIN errado");return}$("profIn").style.display="none";$("profOut").style.display="";carregarProf()}
+let PROF=[];
+async function carregarProf(){
+  const out=$("profDados");out.innerHTML="<p class='sub'>A carregar…</p>";
+  if(!window.FB){out.innerHTML="<p class='sub'>Sem ligação ao Firebase. Abre pelo link do GitHub e verifica a internet.</p>";return}
+  try{PROF=await window.FB.loadAll(ALUNOS)}catch(e){out.innerHTML="<p class='sub'>Erro a ler o Firebase: "+(e.code||e.message)+". Confirma as regras do Firestore.</p>";return}
+  desenharProf();
+}
+function desenharProf(){
+  const dias=+$("fDias").value,lim=dias?Date.now()-dias*864e5:0;
+  const R=PROF.filter(r=>new Date(r.quando).getTime()>=lim).sort((a,b)=>b.quando.localeCompare(a.quando));
+  const T=Object.keys(TEMAS);
+  const fmt=d=>{const x=new Date(d);return x.toLocaleDateString("pt-PT",{day:"2-digit",month:"2-digit"})+" "+x.toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"})};
+  let h=`<div class="tblw"><table class="tbl"><tr><th>Aluno</th>${T.map(t=>`<th>${TEMAS[t].ic}</th>`).join("")}<th>Jogos</th></tr>`;
+  for(const a of ALUNOS){const ra=R.filter(r=>r.aluno===a);
+    h+=`<tr class="${ra.length?"":"nada"}"><td>${a}</td>`+T.map(t=>{const rt=ra.filter(r=>r.tema===t);if(!rt.length)return"<td>–</td>";const best=Math.max(...rt.map(r=>r.certas));return `<td><b>${best}</b>/10<small>${rt.length}×</small></td>`}).join("")+`<td>${ra.length}</td></tr>`}
+  h+=`</table></div><p class="sub" style="margin:6px 0 14px">Em cada tema: a <b>melhor</b> nota e quantas vezes jogou. ${T.map(t=>TEMAS[t].ic+" "+TEMAS[t].nome).join(" · ")}</p>`;
+  h+=`<h2>Últimos jogos</h2>`+(R.length?R.slice(0,60).map(r=>`<details class="jogo"><summary><span>${fmt(r.quando)}</span> <b>${r.aluno}</b> · ${TEMAS[r.tema]?TEMAS[r.tema].ic:""} ${r.temaNome} · <b>${r.certas}/${r.total}</b></summary>${(r.erradas||[]).length?r.erradas.map(e=>`<div>✗ ${e.p}<br><small>${e.r}</small></div>`).join(""):"<div>Acertou em tudo! 🏆</div>"}</details>`).join(""):"<p class='sub'>Ainda não há jogos neste período.</p>");
+  $("profDados").innerHTML=h;
+}
+function falar(){
+  try{
+    const q=Q[idx];const tmp=document.createElement("div");tmp.innerHTML=q.speak||q.prompt.replace(/<br>/g,". ");
+    let t=tmp.textContent;
+    if(q.type==="mc"&&!q.big&&!q.help)t+=". As opções são: "+q.options.join("; ");
+    speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="pt-PT";u.rate=.9;
+    const v=speechSynthesis.getVoices().find(v=>v.lang==="pt-PT")||speechSynthesis.getVoices().find(v=>v.lang.startsWith("pt"));if(v)u.voice=v;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------- arranque ---------- */
+drawNomes();
+if(store.nome&&ALUNOS.includes(store.nome))escolher(store.nome);
+</script>
+<script type="module">
+const cfg={apiKey:"AIzaSyAJdVLPoQnyq-Iu4rgP1HIYnCpArVYOc9Y",authDomain:"leitura-1m.firebaseapp.com",projectId:"leitura-1m",storageBucket:"leitura-1m.firebasestorage.app",messagingSenderId:"126861655472",appId:"1:126861655472:web:c966850e473f3d8650aa75"};
+try{
+  const V="10.12.2",B="https://www.gstatic.com/firebasejs/"+V+"/";
+  const {initializeApp}=await import(B+"firebase-app.js");
+  const {getAuth,signInAnonymously}=await import(B+"firebase-auth.js");
+  const {getFirestore,collection,addDoc,getDocs,serverTimestamp}=await import(B+"firebase-firestore.js");
+  const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+  await signInAnonymously(auth);
+  window.FB={
+    save:r=>addDoc(collection(db,"tpc",r.aluno,"jogos"),{...r,ts:serverTimestamp()}),
+    loadAll:async names=>{const out=[];for(const n of names){const q=await getDocs(collection(db,"tpc",n,"jogos"));q.forEach(d=>out.push({id:d.id,...d.data()}))}return out}
+  };
+  window.dispatchEvent(new Event("fb-ready"));
+}catch(e){console.warn("Firebase indisponível",e)}
+</script>
+</body>
+</html>
