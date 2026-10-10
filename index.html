@@ -444,7 +444,7 @@ function reportCore(el,srcTxt){LASTREP={data:DB,aluno:REP.aluno};const A=DB.atte
  let h=`<h2 style="margin:6px 0">Relatório</h2><p class="note">Gerado a ${fmtD(Date.now())} · aluno ${REP.aluno} · ${srcTxt}</p>`;
  h+=`<div class="kpis">${kpi('Dias de prática',days.size)}${kpi('Tempo a praticar',fmtDur(tot))}${kpi('Respostas dadas',A.length)}${kpi('Última prática',last?fmtD(last)+' '+new Date(last).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'}):'—')}</div>`;
  for(const P of ALLPH){const AP=A.filter(x=>phOf(x)===P.n);
- h+=`<h2 class="phh">Fase ${P.n} <small>(${P.letters.split('').join(' ')})</small></h2>`;
+ h+=`<h2 class="phh">Fase ${P.n} <small>(${[...P.letters].join(' ')})</small></h2>`;
  const blocks=[['letras','🔤 Letras',[...P.items.letras,...P.mai]],['silabas','🧩 Sílabas',P.items.silabas],['palavras','📖 Palavras',P.items.palavras],['frases','💬 Frases',P.items.frases]];
  for(const [cat,title,list] of blocks){const aa=AP.filter(x=>x.cat===cat);
   const pct=aa.length?Math.round(100*aa.filter(x=>x.ok).length/aa.length)+'% certo à 1.ª tentativa ('+aa.length+' respostas)':'ainda não praticou';
