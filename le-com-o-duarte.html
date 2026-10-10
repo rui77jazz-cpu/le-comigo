@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lê com o Duarte</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: 'Comic Sans MS', 'Trebuchet MS', sans-serif;
+    background: linear-gradient(135deg, #ffe29f 0%, #ffa99f 48%, #ff719a 100%);
+    background-attachment: fixed;
+    min-height: 100vh; color: #2b2b3a; user-select: none;
+  }
+  header { text-align: center; padding: 16px; }
+  header h1 { margin: 0; font-size: 1.8rem; color: #fff; text-shadow: 2px 2px 0 #e05070; }
+
+  #menu { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; padding: 10px 16px 24px; }
+  .cartao {
+    width: 150px; border-radius: 22px; padding: 16px 10px; text-align: center; cursor: pointer; border: none;
+    box-shadow: 0 6px 0 rgba(0,0,0,0.15); font-family: inherit; font-size: 1rem; font-weight: bold; color: #fff;
+  }
+  .cartao:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.15); }
+  .cartao .emoji { font-size: 2.6rem; display: block; margin-bottom: 6px; }
+  .cartao .ganhas { display: block; margin-top: 6px; font-size: 1.1rem; min-height: 1.3rem; }
+
+  .ecra { display: none; padding: 0 14px 40px; max-width: 760px; margin: 0 auto; }
+  .barra { display: flex; align-items: center; gap: 10px; padding: 8px 4px; }
+  .btn {
+    border: none; border-radius: 16px; padding: 12px 16px; font-family: inherit;
+    font-size: 1rem; font-weight: bold; color: #fff; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,0.18);
+  }
+  .btn:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,0.18); }
+  .btn-voltar { background: #8a7fff; }
+  .btn-ouvir { background: #35c76a; flex: 1; font-size: 1.1rem; }
+  .btn-silabas { background: #ff8c42; }
+  .btn-silabas.ativo { background: #d85a0e; outline: 3px solid #fff; }
+  .btn-jali { display: block; width: 100%; margin-top: 18px; background: #ff4f7b; font-size: 1.3rem; padding: 16px; }
+  .btn-whats { text-decoration: none; text-align: center; display: block; width: 100%; background: #25d366; font-size: 1.25rem; padding: 16px; margin: 14px 0 12px; }
+
+  .caixa {
+    background: #fff; border-radius: 26px; padding: 22px 16px;
+    box-shadow: 0 8px 0 rgba(0,0,0,0.12); margin-top: 10px;
+  }
+  .titulo-texto { font-size: 1.5rem; margin: 0 0 12px; text-align: center; }
+  #corpoTexto { line-height: 2.2; font-size: 1.5rem; }
+  #corpoTexto .linha { margin-bottom: 6px; }
+
+  .palavra { display: inline-block; margin: 1px 2px; padding: 1px 5px; border-radius: 10px; cursor: pointer; transition: background .15s, transform .1s; }
+  .palavra.ativa { background: #ffe14d; transform: scale(1.1); }
+  .pont { display: inline-block; margin: 0 2px; }
+  .silaba { display: inline-block; padding: 0 2px; }
+  .silaba + .silaba { border-left: 2px dotted #ff8c42; }
+  .silaba.ativa { background: #7fd0ff; border-radius: 8px; }
+
+  /* Perguntas */
+  .progresso { text-align: center; color: #fff; font-size: 1.1rem; font-weight: bold; text-shadow: 1px 1px 0 #d85a0e; }
+  .tipo { text-align: center; font-size: 1rem; font-weight: bold; color: #8a7fff; margin-bottom: 6px; }
+  .pergunta { font-size: 1.45rem; text-align: center; margin: 4px 0 18px; line-height: 1.4; }
+  .opcoes { display: flex; flex-direction: column; gap: 12px; }
+  .opcoes.vf { flex-direction: row; }
+  .opcoes.vf .opcao { flex: 1; font-size: 1.4rem; font-weight: bold; }
+  .opcao {
+    border: 3px solid #e3e3f0; background: #f7f7ff; border-radius: 18px; padding: 14px;
+    font-family: inherit; font-size: 1.25rem; cursor: pointer; color: #2b2b3a; box-shadow: 0 4px 0 #e3e3f0; text-align: center;
+  }
+  .opcao.certa { background: #c9f7d6; border-color: #35c76a; box-shadow: 0 4px 0 #35c76a; }
+  .opcao.errada { background: #ffd6dc; border-color: #ff4f7b; box-shadow: 0 4px 0 #ff4f7b; animation: abanar .35s; }
+  .opcao.usada { opacity: .35; pointer-events: none; }
+  @keyframes abanar { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 75%{transform:translateX(8px)} }
+
+  .ordem-lugares { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .lugar {
+    min-height: 54px; border: 3px dashed #c9c9e0; border-radius: 16px; padding: 10px 12px;
+    font-size: 1.15rem; display: flex; align-items: center; gap: 10px; color: #2b2b3a;
+  }
+  .lugar .num { background: #8a7fff; color: #fff; border-radius: 50%; width: 32px; height: 32px; flex: 0 0 32px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+  .lugar.cheio { border-style: solid; border-color: #35c76a; background: #effcf3; }
+
+  .feedback { text-align: center; font-size: 1.3rem; font-weight: bold; min-height: 1.8rem; margin-top: 14px; }
+  .feedback.bom { color: #1e9c4c; }
+  .feedback.mau { color: #e03a62; }
+
+  .final { text-align: center; }
+  .nota-num { font-size: .95rem !important; color: #6b6b80; margin: 0 0 14px !important; user-select: text; }
+  .estrelas { font-size: 3rem; letter-spacing: 6px; min-height: 3.4rem; }
+  .final p { font-size: 1.4rem; margin: 8px 0 16px; }
+</style>
+</head>
+<body>
+<header><h1>📚 Lê com o Duarte</h1></header>
+
+<div id="menu"></div>
+
+<!-- LEITURA -->
+<div class="ecra" id="leitura">
+  <div class="barra">
+    <button class="btn btn-voltar" onclick="voltar()">⬅</button>
+    <button class="btn btn-ouvir" onclick="ouvirTudo()">▶ Ouvir tudo</button>
+    <button class="btn btn-silabas" id="btnSil" onclick="alternarSilabas()">Sílabas</button>
+  </div>
+  <div class="caixa">
+    <h2 class="titulo-texto" id="tituloTexto"></h2>
+    <div id="corpoTexto"></div>
+  </div>
+  <button class="btn btn-jali" onclick="comecarPerguntas()">Já li! 👉 Perguntas</button>
+  <a class="btn btn-whats" href="https://wa.me/351911196622" target="_blank" rel="noopener" onclick="this.href=linkWhats()">📲 Enviar ao professor</a>
+</div>
+
+<!-- PERGUNTAS -->
+<div class="ecra" id="perguntas">
+  <div class="barra">
+    <button class="btn btn-voltar" onclick="voltarAoTexto()">⬅ Texto</button>
+    <div class="progresso" id="progresso" style="flex:1"></div>
+  </div>
+  <div class="caixa">
+    <div class="tipo" id="tipoPergunta"></div>
+    <div class="pergunta" id="textoPergunta"></div>
+    <div id="zonaResposta"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+  <a class="btn btn-whats" href="https://wa.me/351911196622" target="_blank" rel="noopener" onclick="this.href=linkWhats()">📲 Enviar ao professor</a>
+</div>
+
+<!-- FINAL -->
+<div class="ecra" id="final">
+  <div class="caixa final">
+    <div class="estrelas" id="estrelas"></div>
+    <p id="msgFinal"></p>
+    <a class="btn btn-whats" href="https://wa.me/351911196622" target="_blank" rel="noopener" onclick="this.href=linkWhats()">📲 Enviar ao professor</a>
+    <p class="nota-num">WhatsApp do professor: 911 196 622</p>
+    <button class="btn btn-voltar" onclick="voltar()">⬅ Escolher outro texto</button>
+  </div>
+</div>
+
+<script>
+const NUMERO_PROFESSOR = "351911196622";
+
+// Tipos de pergunta: "escolha" (a 1.ª opção é a certa), "vf" (verdadeiro/falso), "ordem" (frases pela ordem certa)
+const textos = [
+  {
+    titulo: "O Gato Tomás", cor: "#ff6f91", emoji: "🐱",
+    frases: [
+      "O To·más é um ga·to ma·lha·do e mui·to pre·gui·ço·so.",
+      "Pas·sa o di·a a dor·mir em ci·ma da al·mo·fa·da ver·me·lha.",
+      "Um di·a, ou·viu um ba·ru·lho na co·zi·nha.",
+      "— Se·rá um ra·to? — pen·sou e·le.",
+      "Cor·reu de·pres·sa, mas e·ra só a Ma·ri·a a fa·zer bo·la·chas.",
+      "O To·más ga·nhou um bo·ca·di·nho e vol·tou a dor·mir."
+    ],
+    perguntas: [
+      { tipo: "escolha", p: "Como é o gato Tomás?", o: ["Preguiçoso", "Zangado", "Medroso"] },
+      { tipo: "vf", p: "O Tomás dorme numa almofada azul.", certo: false },
+      { tipo: "escolha", p: "Quem estava na cozinha?", o: ["A Maria", "Um rato", "Um cão"] },
+      { tipo: "vf", p: "A Maria estava a fazer bolachas.", certo: true },
+      { tipo: "ordem", p: "Põe a história pela ordem certa.", o: ["O Tomás ouviu um barulho.", "Correu para a cozinha.", "Voltou a dormir."] }
+    ]
+  },
+  {
+    titulo: "O Jogo de Futebol", cor: "#3ec6ff", emoji: "⚽",
+    frases: [
+      "No sá·ba·do, o Du·ar·te foi jo·gar à bo·la com os a·mi·gos.",
+      "O cam·po es·ta·va mo·lha·do por·que ti·nha cho·vi·do.",
+      "O Du·ar·te cor·reu, cor·reu e chu·tou com mui·ta for·ça.",
+      "A bo·la pas·sou por bai·xo do guar·da-·re·des!",
+      "— Go·lo! — gri·ta·ram os co·le·gas.",
+      "No fim, to·dos ga·nha·ram me·da·lhas de cho·co·la·te."
+    ],
+    perguntas: [
+      { tipo: "escolha", p: "Em que dia foi o jogo?", o: ["No sábado", "No domingo", "Na segunda-feira"] },
+      { tipo: "vf", p: "O campo estava seco.", certo: false },
+      { tipo: "escolha", p: "O que ganharam no fim?", o: ["Medalhas de chocolate", "Uma taça", "Uma bola nova"] },
+      { tipo: "vf", p: "O Duarte marcou golo.", certo: true },
+      { tipo: "ordem", p: "Põe a história pela ordem certa.", o: ["O Duarte foi jogar à bola.", "Chutou com muita força.", "Ganharam medalhas."] }
+    ]
+  },
+  {
+    titulo: "Um Dia na Praia", cor: "#ffb830", emoji: "🏖️",
+    frases: [
+      "Es·ta·va um di·a de sol e mui·to ca·lor.",
+      "A So·fi·a e o pai fo·ram à prai·a.",
+      "Le·va·ram um bal·de, u·ma pá e um cha·péu de sol.",
+      "A So·fi·a fez um cas·te·lo de a·rei·a mui·to al·to.",
+      "De re·pen·te, vei·o u·ma on·da e le·vou o cas·te·lo.",
+      "— Não faz mal! Va·mos fa·zer ou·tro! — dis·se o pai."
+    ],
+    perguntas: [
+      { tipo: "escolha", p: "Quem foi à praia com a Sofia?", o: ["O pai", "A mãe", "O avô"] },
+      { tipo: "vf", p: "Estava um dia de chuva.", certo: false },
+      { tipo: "escolha", p: "O que levou o castelo?", o: ["Uma onda", "O vento", "Um cão"] },
+      { tipo: "vf", p: "O pai disse para fazerem outro castelo.", certo: true },
+      { tipo: "ordem", p: "Põe a história pela ordem certa.", o: ["Foram à praia.", "A Sofia fez um castelo.", "Uma onda levou o castelo."] }
+    ]
+  },
+  {
+    titulo: "O Bobi e a Bota", cor: "#8a7fff", emoji: "🐶",
+    frases: [
+      "O Bo·bi é um cão cas·ta·nho com o·re·lhas com·pri·das.",
+      "Ho·je de ma·nhã, a·pa·re·ceu u·ma bo·ta no jar·dim.",
+      "O Bo·bi chei·rou a bo·ta e co·me·çou a la·drar.",
+      "Pe·gou ne·la com a bo·ca e es·con·deu-·a de·bai·xo da ár·vo·re.",
+      "O a·vô an·da·va à pro·cu·ra da bo·ta por to·da a ca·sa!",
+      "— Bo·bi, seu ma·lan·dro! — dis·se o a·vô, a rir."
+    ],
+    perguntas: [
+      { tipo: "escolha", p: "Onde escondeu o Bobi a bota?", o: ["Debaixo da árvore", "Na cama", "Na garagem"] },
+      { tipo: "vf", p: "O Bobi é um cão preto.", certo: false },
+      { tipo: "escolha", p: "De quem era a bota?", o: ["Do avô", "Do Bobi", "Do vizinho"] },
+      { tipo: "vf", p: "O avô ficou a rir.", certo: true },
+      { tipo: "ordem", p: "Põe a história pela ordem certa.", o: ["Apareceu uma bota no jardim.", "O Bobi escondeu a bota.", "O avô procurou a bota."] }
+    ]
+  }
+];
+
+let modoSilabas = false, textoAtual = null, idxTexto = 0, aLer = false;
+let qIdx = 0, acertos = 0, errouEsta = false, respondidas = 0;
+const tentativas = []; // cada texto feito desde que a app foi aberta
+let atual = null;
+const melhores = {};
+
+// ---------- Menu ----------
+const menu = document.getElementById('menu');
+function estrelasDe(pontos, total) {
+  if (pontos === total) return 3;
+  if (pontos >= total - 2) return 2;
+  if (pontos >= 1) return 1;
+  return 0;
+}
+function desenharMenu() {
+  menu.innerHTML = '';
+  textos.forEach((t, i) => {
+    const b = document.createElement('button');
+    b.className = 'cartao';
+    b.style.background = t.cor;
+    const g = melhores[i] != null ? '⭐'.repeat(melhores[i]) + '☆'.repeat(3 - melhores[i]) : '';
+    b.innerHTML = `<span class="emoji">${t.emoji}</span>${t.titulo}<span class="ganhas">${g}</span>`;
+    b.onclick = () => abrirTexto(i);
+    menu.appendChild(b);
+  });
+}
+desenharMenu();
+
+function mostrar(id) {
+  menu.style.display = id === 'menu' ? 'flex' : 'none';
+  ['leitura', 'perguntas', 'final'].forEach(e => document.getElementById(e).style.display = e === id ? 'block' : 'none');
+  window.scrollTo(0, 0);
+}
+
+// ---------- Voz (só no texto) ----------
+function vozPT() {
+  const vs = speechSynthesis.getVoices();
+  return vs.find(v => v.lang === 'pt-PT') || vs.find(v => v.lang && v.lang.startsWith('pt')) || null;
+}
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => {};
+function calar() { if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+function falar(txt, aoAcabar) {
+  if (!('speechSynthesis' in window)) { if (aoAcabar) setTimeout(aoAcabar, 500); return; }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(txt.replace(/·/g, '').replace(/[—.!?,]/g, ' ').trim());
+  u.lang = 'pt-PT';
+  const v = vozPT(); if (v) u.voice = v;
+  u.rate = 0.8;
+  if (aoAcabar) u.onend = aoAcabar;
+  speechSynthesis.speak(u);
+}
+const temLetras = s => /[A-Za-zÀ-ÿ]/.test(s);
+
+// ---------- Texto ----------
+function abrirTexto(i) {
+  idxTexto = i; textoAtual = textos[i];
+  acertos = 0; respondidas = 0;
+  const d = new Date();
+  atual = { i, hora: String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'), respondidas: 0, acertos: 0 };
+  tentativas.push(atual);
+  document.getElementById('tituloTexto').textContent = textoAtual.emoji + ' ' + textoAtual.titulo;
+  construirTexto();
+  mostrar('leitura');
+}
+
+function construirTexto() {
+  const corpo = document.getElementById('corpoTexto');
+  corpo.innerHTML = '';
+  textoAtual.frases.forEach(frase => {
+    const linha = document.createElement('div');
+    linha.className = 'linha';
+    frase.split(' ').forEach(pal => {
+      const span = document.createElement('span');
+      if (!temLetras(pal)) { span.className = 'pont'; span.textContent = pal; linha.appendChild(span); return; }
+      span.className = 'palavra';
+      span.dataset.pal = pal;
+      if (modoSilabas) {
+        pal.split('·').forEach(sil => {
+          const s = document.createElement('span');
+          s.className = 'silaba'; s.textContent = sil; span.appendChild(s);
+        });
+      } else span.textContent = pal.replace(/·/g, '');
+      span.onclick = () => tocarPalavra(span);
+      linha.appendChild(span);
+    });
+    corpo.appendChild(linha);
+  });
+}
+
+function limpar() { document.querySelectorAll('.ativa').forEach(e => e.classList.remove('ativa')); }
+
+function tocarPalavra(span) {
+  aLer = false; limpar();
+  const pal = span.dataset.pal;
+  if (modoSilabas) {
+    const sils = pal.split('·'), spans = span.querySelectorAll('.silaba');
+    let k = 0;
+    const seguinte = () => {
+      spans.forEach(s => s.classList.remove('ativa'));
+      if (k < sils.length) {
+        spans[k].classList.add('ativa');
+        falar(sils[k], () => { k++; setTimeout(seguinte, 150); });
+      } else {
+        span.classList.add('ativa');
+        falar(pal, () => span.classList.remove('ativa'));
+      }
+    };
+    seguinte();
+  } else {
+    span.classList.add('ativa');
+    falar(pal, () => span.classList.remove('ativa'));
+  }
+}
+
+function ouvirTudo() {
+  const palavras = Array.from(document.querySelectorAll('.palavra'));
+  let i = 0; aLer = true;
+  const seguinte = () => {
+    if (!aLer) return;
+    limpar();
+    if (i < palavras.length) {
+      palavras[i].classList.add('ativa');
+      falar(palavras[i].dataset.pal, () => { i++; setTimeout(seguinte, 100); });
+    } else aLer = false;
+  };
+  seguinte();
+}
+
+function alternarSilabas() {
+  modoSilabas = !modoSilabas;
+  document.getElementById('btnSil').classList.toggle('ativo', modoSilabas);
+  construirTexto();
+}
+
+// ---------- Perguntas (só escritas, sem voz) ----------
+function baralhar(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function perguntaAtual() { return textoAtual.perguntas[qIdx]; }
+
+function comecarPerguntas() {
+  aLer = false; calar();
+  qIdx = 0; acertos = 0; respondidas = 0;
+  if (atual) { atual.respondidas = 0; atual.acertos = 0; }
+  mostrar('perguntas');
+  mostrarPergunta();
+}
+
+function feedback(txt, bom) {
+  const f = document.getElementById('feedback');
+  f.textContent = txt;
+  f.className = 'feedback ' + (bom ? 'bom' : 'mau');
+}
+
+function mostrarPergunta() {
+  errouEsta = false;
+  const q = perguntaAtual();
+  const nomes = { escolha: '🔵 Escolhe a resposta certa', vf: '✅ Verdadeiro ou falso?', ordem: '🔢 Ordena a história' };
+  document.getElementById('progresso').textContent = `Pergunta ${qIdx + 1} de ${textoAtual.perguntas.length}`;
+  document.getElementById('tipoPergunta').textContent = nomes[q.tipo];
+  document.getElementById('textoPergunta').textContent = q.p;
+  feedback('', true);
+  const zona = document.getElementById('zonaResposta');
+  zona.innerHTML = '';
+  if (q.tipo === 'escolha') montarEscolha(zona, q);
+  else if (q.tipo === 'vf') montarVF(zona, q);
+  else montarOrdem(zona, q);
+}
+
+function errou(btn) {
+  errouEsta = true;
+  btn.classList.remove('errada'); void btn.offsetWidth; btn.classList.add('errada');
+  feedback('Ainda não. Lê outra vez! 👀', false);
+}
+
+function acertou() {
+  respondidas++;
+  if (!errouEsta) acertos++;
+  if (atual) { atual.respondidas = respondidas; atual.acertos = acertos; }
+  document.querySelectorAll('#zonaResposta .opcao').forEach(o => o.onclick = null);
+  feedback(errouEsta ? 'Isso! 👍' : 'Muito bem! 🎉', true);
+  setTimeout(proxima, 1100);
+}
+
+function montarEscolha(zona, q) {
+  const box = document.createElement('div'); box.className = 'opcoes';
+  baralhar(q.o).forEach(op => {
+    const b = document.createElement('button');
+    b.className = 'opcao'; b.textContent = op;
+    b.onclick = () => { if (op === q.o[0]) { b.classList.add('certa'); acertou(); } else errou(b); };
+    box.appendChild(b);
+  });
+  zona.appendChild(box);
+}
+
+function montarVF(zona, q) {
+  const box = document.createElement('div'); box.className = 'opcoes vf';
+  [['Verdadeiro', true], ['Falso', false]].forEach(([txt, val]) => {
+    const b = document.createElement('button');
+    b.className = 'opcao'; b.textContent = txt;
+    b.onclick = () => { if (val === q.certo) { b.classList.add('certa'); acertou(); } else errou(b); };
+    box.appendChild(b);
+  });
+  zona.appendChild(box);
+}
+
+function montarOrdem(zona, q) {
+  let proximo = 0;
+  const lugares = document.createElement('div'); lugares.className = 'ordem-lugares';
+  const slots = q.o.map((_, i) => {
+    const l = document.createElement('div'); l.className = 'lugar';
+    l.innerHTML = `<span class="num">${i + 1}</span><span class="txt"></span>`;
+    lugares.appendChild(l); return l;
+  });
+  const box = document.createElement('div'); box.className = 'opcoes';
+  baralhar(q.o).forEach(frase => {
+    const b = document.createElement('button');
+    b.className = 'opcao'; b.textContent = frase;
+    b.onclick = () => {
+      if (frase === q.o[proximo]) {
+        slots[proximo].classList.add('cheio');
+        slots[proximo].querySelector('.txt').textContent = frase;
+        b.classList.add('usada');
+        feedback('', true);
+        proximo++;
+        if (proximo === q.o.length) acertou();
+      } else errou(b);
+    };
+    box.appendChild(b);
+  });
+  zona.appendChild(lugares);
+  zona.appendChild(box);
+}
+
+function proxima() {
+  qIdx++;
+  if (qIdx < textoAtual.perguntas.length) mostrarPergunta();
+  else mostrarFinal();
+}
+
+function voltarAoTexto() { mostrar('leitura'); }
+
+// ---------- Final ----------
+
+function mostrarFinal() {
+  const total = textoAtual.perguntas.length;
+  const n = estrelasDe(acertos, total);
+  melhores[idxTexto] = Math.max(melhores[idxTexto] || 0, n);
+  mostrar('final');
+  const e = document.getElementById('estrelas');
+  e.textContent = '';
+  for (let k = 0; k < 3; k++) setTimeout(() => { e.textContent += k < n ? '⭐' : '☆'; }, k * 400);
+  const msgs = ['Vamos ler outra vez, Duarte!', 'Boa, Duarte! Continua a treinar!', 'Muito bem, Duarte!', 'Fantástico, Duarte! Acertaste tudo!'];
+  document.getElementById('msgFinal').textContent = `${msgs[n]} Acertaste ${acertos} de ${total} à primeira.`;
+}
+
+function linkWhats() {
+  let msg = 'Olá professor! Sou o Duarte 😊\n';
+  if (!tentativas.length) {
+    msg += 'Abri a app mas ainda não li nenhum texto.';
+  } else {
+    msg += tentativas.length === 1 ? 'Hoje fiz 1 texto:\n' : `Hoje fiz ${tentativas.length} textos:\n`;
+    let totalCertas = 0, totalResp = 0;
+    tentativas.forEach((t, k) => {
+      const tx = textos[t.i], total = tx.perguntas.length;
+      totalCertas += t.acertos; totalResp += t.respondidas;
+      let linha = `\n${k + 1}. ${tx.emoji} ${tx.titulo} (${t.hora})\n   `;
+      if (t.respondidas === 0) linha += 'Li o texto, ainda sem perguntas.';
+      else if (t.respondidas < total) linha += `Respondi a ${t.respondidas} de ${total} e acertei ${t.acertos} à primeira.`;
+      else {
+        const n = estrelasDe(t.acertos, total);
+        linha += `Respondi a todas e acertei ${t.acertos} de ${total} à primeira ${'⭐'.repeat(n)}${'☆'.repeat(3 - n)}`;
+      }
+      msg += linha;
+    });
+    if (tentativas.length > 1) msg += `\n\nTotal: ${totalResp} perguntas respondidas, ${totalCertas} certas à primeira.`;
+  }
+  return `https://wa.me/${NUMERO_PROFESSOR}?text=${encodeURIComponent(msg)}`;
+}
+
+function voltar() {
+  aLer = false; calar();
+  modoSilabas = false;
+  document.getElementById('btnSil').classList.remove('ativo');
+  desenharMenu();
+  mostrar('menu');
+}
+</script>
+
+</body>
+</html>
