@@ -186,14 +186,17 @@ const PH={
   fra:['A a-ra-ra co-me a pe-ra','O mar é da Li-li','A co-ro-a é do Pi-po','O co-lar é da me-ni-na','A pa-re-de é da a-vó','O ca-rro é da ti-a']})};
 const NPH=4,ALLPH=Object.values(PH);
 const ALLSYL=ALLPH.flatMap(p=>p.items.silabas),ALLPAL=ALLPH.flatMap(p=>p.items.palavras);
+const TODAS={n:'T',items:{letras:ALLPH.flatMap(p=>p.items.letras),silabas:ALLSYL,palavras:ALLPAL,frases:[]},mai:ALLPH.flatMap(p=>p.mai),letters:ALLPH.flatMap(p=>[...p.letters]),extraSyl:ALLPH.flatMap(p=>p.extraSyl)};
+const isT=()=>phase==='T';
+const inCur=a=>isT()?a.ph==='T':(a.ph!=='T'&&phOf(a)===phase);
 let phase=1,ITEMS,MAI,SYLPOOL,WORDPOOL,LETPOOL;
-function setPhaseData(n){phase=n;const P=PH[n];ITEMS=P.items;MAI=P.mai;const known=ALLPH.filter(p=>p.n<=n);
+function setPhaseData(n){phase=n;const P=n==='T'?TODAS:PH[n];ITEMS=P.items;MAI=P.mai;const known=n==='T'?ALLPH:ALLPH.filter(p=>p.n<=n);
  LETPOOL=known.flatMap(p=>p.items.letras.map(l=>l.txt));
  SYLPOOL=[...new Set(known.flatMap(p=>[...p.items.silabas.map(x=>x.txt),...p.extraSyl]))];
  WORDPOOL=[...new Set([...ITEMS.frases.flatMap(f=>f.parts.map(w=>w==='A'||w==='O'?w.toLowerCase():w)),...ITEMS.palavras.map(p=>p.txt)])];}
 setPhaseData(1);
 function poolOf(cat){if(cat!=='letras')return ITEMS[cat];return PREF.caixa==='mai'?MAI:PREF.caixa==='mix'?[...ITEMS.letras,...MAI]:ITEMS.letras;}
-function prevPool(cat){if(phase<2||(cat!=='letras'&&cat!=='silabas'))return[];return ALLPH.filter(p=>p.n<phase).flatMap(p=>cat==='silabas'?p.items.silabas:(PREF.caixa==='mai'?p.mai:PREF.caixa==='mix'?[...p.items.letras,...p.mai]:p.items.letras));}
+function prevPool(cat){if(isT()||phase<2||(cat!=='letras'&&cat!=='silabas'))return[];return ALLPH.filter(p=>p.n<phase).flatMap(p=>cat==='silabas'?p.items.silabas:(PREF.caixa==='mai'?p.mai:PREF.caixa==='mix'?[...p.items.letras,...p.mai]:p.items.letras));}
 function setCaixa(c){PREF.caixa=c;applyPref();renderHome();}
 const EXTRA=[['extra-a','a'],['extra-o','o'],['extra-e','e'],['extra-e-aberto','é'],['extra-le','lê'],['extra-lili','Lili'],['extra-pipo','Pipo'],['extra-pula','pula'],['extra-mole','mole'],
  ['extra-voa','voa'],['extra-do','do'],['extra-da','da'],['extra-tua','tua'],['extra-avo','avó'],['extra-tia','tia'],['extra-come','come'],['silaba-nel','nel'],['silaba-pel','pel'],['extra-corre','corre'],['extra-no','no']].map(([id,txt])=>({id,txt,say:txt,ph:id.match(/corre|extra-no$/)?4:id.match(/come|nel|pel/)?3:id.match(/voa|do$|da$|tua|avo|tia/)?2:1}));
@@ -297,11 +300,11 @@ function htmlSyl(sy){return sy.map((s,i)=>`<span class="s${i%2}">${s}</span>`).j
 function display(it){if(it.cat==='letras'||it.cat==='silabas')return htmlLetters(it.txt);if(it.cat==='palavras')return htmlSyl(it.parts);return it.words.map(htmlSyl).join(' ')+'.';}
 function itemStats(id){let n=0,ok=0;for(const a of DB.attempts)if(a.item===id){n++;if(a.ok)ok++;}return{n,ok};}
 const phOf=a=>{const it=BYID[a.item];return it?it.ph:1;};
-function levelAcc(c){const r=DB.attempts.filter(a=>a.cat===c&&phOf(a)===phase).slice(-20);return r.length?r.filter(a=>a.ok).length/r.length:null;}
+function levelAcc(c){const r=DB.attempts.filter(a=>a.cat===c&&inCur(a)).slice(-20);return r.length?r.filter(a=>a.ok).length/r.length:null;}
 function wpick(w){let r=Math.random()*w.reduce((a,b)=>a+b,0);for(let i=0;i<w.length;i++){r-=w[i];if(r<=0)return i;}return w.length-1;}
 function pickItems(cat,k){const pool=poolOf(cat);const w=pool.map(it=>{const s=itemStats(it.id);return 1+(s.n-s.ok)*2+Math.max(0,3-s.n);});const out=[];let last=null;
  for(let i=0;i<k;i++){let idx,t=0;do{idx=wpick(w);t++;}while(pool[idx]===last&&t<12);out.push(pool[idx]);last=pool[idx];}return out;}
-function nOptions(cat){const r=DB.attempts.filter(a=>a.cat===cat&&a.mode==='escolher'&&phOf(a)===phase).slice(-20);if(r.length<8)return 2;const acc=r.filter(a=>a.ok).length/r.length;return Math.min(poolOf(cat).length+prevPool(cat).length,acc>=.9?4:acc>=.75?3:2);}
+function nOptions(cat){const r=DB.attempts.filter(a=>a.cat===cat&&a.mode==='escolher'&&inCur(a)).slice(-20);if(r.length<8)return 2;const acc=r.filter(a=>a.ok).length/r.length;return Math.min(poolOf(cat).length+prevPool(cat).length,acc>=.9?4:acc>=.75?3:2);}
 function sim(a,b){if(a.cat==='letras')return isV(a.txt)===isV(b.txt)?1:0;let s=0;const A=a.txt.toLowerCase(),B=b.txt.toLowerCase();for(let i=0;i<Math.min(A.length,B.length);i++)if(A[i]===B[i])s++;return s;}
 function rPar(t){t=t.toLowerCase();return t.includes('rr')?t.replace('rr','r'):/^r[aeiou]$/.test(t)||t==='r'?t.replace('r','rr'):null;}
 function distractors(it,k){const ok=x=>x.id!==it.id&&aid(x)!==aid(it);let c=shuffle(poolOf(it.cat).filter(ok)),p=shuffle(prevPool(it.cat).filter(ok));
@@ -326,16 +329,16 @@ const OPEN_KEY='lecomigo-fases-a'+ALUNO;
 const OPEN=Object.fromEntries(Object.keys(PH).map(k=>[k,true]));
 function saveOpen(){try{localStorage.setItem(OPEN_KEY,JSON.stringify(OPEN));}catch(e){}}
 function applyFases(){}
-try{const pf=+localStorage.getItem('lecomigo-ultfase-a'+ALUNO);if(pf>1&&pf<=NPH)setPhaseData(pf);}catch(e){}
+try{const pv=localStorage.getItem('lecomigo-ultfase-a'+ALUNO);const pf=+pv;if(pv==='T')setPhaseData('T');else if(pf>1&&pf<=NPH)setPhaseData(pf);}catch(e){}
 function goPhase(n){setPhaseData(n);try{localStorage.setItem('lecomigo-ultfase-a'+ALUNO,n);}catch(e){}renderHome();}
-function renderNav(){document.getElementById('sub').textContent='Fase '+phase;
- document.getElementById('nav').innerHTML=ALLPH.map(p=>{const op=!!OPEN[p.n];return`<button class="fase ${p.n===phase?'on':''} ${op?'':'lock'}" onclick="goPhase(${p.n})">${op?'':'🔒 '}Fase ${p.n} <small>${p.letters.length>5?'':[...p.letters].join(' ')}</small></button>`;}).join('');applyPref();}
+function renderNav(){document.getElementById('sub').textContent=isT()?'Todas':'Fase '+phase;
+ document.getElementById('nav').innerHTML=ALLPH.map(p=>{const op=!!OPEN[p.n];return`<button class="fase ${p.n===phase?'on':''} ${op?'':'lock'}" onclick="goPhase(${p.n})">${op?'':'🔒 '}Fase ${p.n} <small>${p.letters.length>5?'':[...p.letters].join(' ')}</small></button>`;}).join('')+`<button class="fase ${isT()?'on':''}" onclick="goPhase('T')">⭐ Todas</button>`;applyPref();}
 function topBar(cat,mode){return`<div class="top"><button class="home" onclick="renderHome()">⬅ Voltar</button><div class="ttl">${CATN[cat]} · ${MODEN[mode]}</div></div>`;}
 function renderHome(){stopAudio();R=null;renderNav();
- if(!OPEN[phase]&&!pinOk){main.innerHTML=`<div class="msgbox">🔒 A Fase ${phase} abre quando o professor decidir.</div>`;return;}
- const P=PH[phase],L=ITEMS.letras.map(l=>l.txt);
- const sample={letras:htmlLetters((PREF.caixa==='mai'?L.slice(-4).map(x=>x.toUpperCase()):PREF.caixa==='mix'?[L[L.length-1].toUpperCase(),L[L.length-1]]:L.slice(-4)).join(' ')),silabas:htmlLetters(ITEMS.silabas[0].txt+' '+ITEMS.silabas[6].txt),palavras:htmlSyl(ITEMS.palavras[0].parts),frases:htmlSyl(ITEMS.frases[0].words[0])+' '+htmlSyl(ITEMS.frases[0].words[1])+'…'};
- main.innerHTML=`<div class="letras-fase">${[...P.letters].map(ch=>'<span style="display:inline-block;margin:0 .18em">'+htmlLetters(ch)+'</span>').join('')}</div><div class="cards">${CATS.map(c=>{const acc=levelAcc(c);
+ if(!isT()&&!OPEN[phase]&&!pinOk){main.innerHTML=`<div class="msgbox">🔒 A Fase ${phase} abre quando o professor decidir.</div>`;return;}
+ const P=isT()?TODAS:PH[phase],L=ITEMS.letras.map(l=>l.txt);
+ const sample={letras:htmlLetters((PREF.caixa==='mai'?L.slice(-4).map(x=>x.toUpperCase()):PREF.caixa==='mix'?[L[L.length-1].toUpperCase(),L[L.length-1]]:L.slice(-4)).join(' ')),silabas:htmlLetters(ITEMS.silabas[0].txt+' '+ITEMS.silabas[6].txt),palavras:htmlSyl(ITEMS.palavras[0].parts),frases:ITEMS.frases.length?htmlSyl(ITEMS.frases[0].words[0])+' '+htmlSyl(ITEMS.frases[0].words[1])+'…':''};
+ main.innerHTML=`<div class="letras-fase">${[...P.letters].map(ch=>'<span style="display:inline-block;margin:0 .18em">'+htmlLetters(ch)+'</span>').join('')}</div><div class="cards">${CATS.filter(c=>ITEMS[c].length).map(c=>{const acc=levelAcc(c);
   return`<div class="card"><div class="card-h"><h2>${CATN[c]}</h2><div class="sample">${sample[c]}</div></div>
   <div class="bar"><span style="width:${acc==null?0:Math.round(acc*100)}%"></span></div><div class="bar-l">${acc==null?'Ainda não praticou':Math.round(acc*100)+'% certo à primeira'}</div>
   <div class="modes">${c==='letras'?`<div class="caixa">${Object.keys(CAIXAN).map(k=>`<button class="cx ${PREF.caixa===k?'on':''}" onclick="setCaixa('${k}')">${k==='min'?'a':k==='mai'?'A':'A a'}<small>${CAIXAN[k]}</small></button>`).join('')}</div>`:''}<button class="mode m-ver" onclick="renderVer('${c}',0)">👀 Ver e ouvir</button><button class="mode m-esc" onclick="startRound('${c}','escolher')">👂 Ouvir e escolher</button>${c==='letras'?'':`<button class="mode m-con" onclick="startRound('${c}','construir')">🧩 Ouvir e construir</button>`}</div></div>`;}).join('')}</div>`;}
@@ -465,14 +468,14 @@ function reportCore(el,srcTxt){LASTREP={data:DB,aluno:REP.aluno};const A=DB.atte
    if(nunca.length)h+=`<p class="note">⚪ Ainda não praticou: ${nunca.join(', ')}</p>`;}
   h+=`</div>`;}}
  h+=`<h3>Evolução por dia (% certo à primeira tentativa)</h3>`+chartSVG();
- h+=`<h3>Últimas sessões</h3>`+(S.length?`<table class="tbl"><tr><th>Dia</th><th>Hora</th><th>Nível</th><th>Modo</th><th>Certas à 1.ª</th><th>Duração</th></tr>${S.slice(-15).reverse().map(x=>`<tr><td>${fmtD(x.t-x.dur)}</td><td>${new Date(x.t-x.dur).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}</td><td>Fase ${x.ph||1} · ${LVN[x.cat]}</td><td>${MODEN[x.mode]}</td><td>${x.ok} de ${x.n}</td><td>${Math.max(1,Math.round(x.dur/60000))} min</td></tr>`).join('')}</table>`:'<p class="note">Ainda nenhuma sessão completa (uma sessão conta quando chega ao fim das 8 perguntas).</p>');
+ h+=`<h3>Últimas sessões</h3>`+(S.length?`<table class="tbl"><tr><th>Dia</th><th>Hora</th><th>Nível</th><th>Modo</th><th>Certas à 1.ª</th><th>Duração</th></tr>${S.slice(-15).reverse().map(x=>`<tr><td>${fmtD(x.t-x.dur)}</td><td>${new Date(x.t-x.dur).toLocaleTimeString('pt-PT',{hour:'2-digit',minute:'2-digit'})}</td><td>${x.ph==='T'?'Todas':'Fase '+(x.ph||1)} · ${LVN[x.cat]}</td><td>${MODEN[x.mode]}</td><td>${x.ok} de ${x.n}</td><td>${Math.max(1,Math.round(x.dur/60000))} min</td></tr>`).join('')}</table>`:'<p class="note">Ainda nenhuma sessão completa (uma sessão conta quando chega ao fim das 8 perguntas).</p>');
  h+=`<div class="row noprint" style="justify-content:flex-start;margin-top:20px"><button class="sbtn" onclick="window.print()">🖨 Imprimir / PDF</button><button class="sbtn" onclick="exportExcel()">⬇ Excel</button><button class="sbtn danger" onclick="resetData()">🗑 Apagar dados</button></div>`;
  el.innerHTML=h;}
 async function exportExcel(){if(!LASTREP)return;try{if(!window.XLSX)await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');}catch(e){alert('Não foi possível preparar o Excel (sem internet?).');return;}
  const {data,aluno}=LASTREP;const A=data.attempts,S=data.sessions;
  const res=a=>a.ok?'Certo à 1.ª':('Errou'+(a.tries&&a.tries.length?' '+a.tries.length+'×, depois acertou':' à 1.ª'));
  const rows=A.map(a=>{const w=wrongList(a);return {'Dia':fmtD(a.t),'Hora':fmtH(a.t),'Nível':nivel(a),'Modo':MODEN[a.mode]||a.mode,'Ouviu':itTxt(a),'Respondeu':[...w,itTxt(a)].join(' → '),'Resultado':res(a),'Tempo (s)':Math.round((a.ms||0)/1000)};});
- const ses=S.map(x=>({'Dia':fmtD(x.t-x.dur),'Início':fmtH(x.t-x.dur),'Fim':fmtH(x.t),'Nível':'Fase '+(x.ph||1)+' · '+LVN[x.cat],'Modo':MODEN[x.mode]||x.mode,'Certas à 1.ª':x.ok+' de '+x.n,'Duração (min)':Math.round(x.dur/6000)/10}));
+ const ses=S.map(x=>({'Dia':fmtD(x.t-x.dur),'Início':fmtH(x.t-x.dur),'Fim':fmtH(x.t),'Nível':(x.ph==='T'?'Todas':'Fase '+(x.ph||1))+' · '+LVN[x.cat],'Modo':MODEN[x.mode]||x.mode,'Certas à 1.ª':x.ok+' de '+x.n,'Duração (min)':Math.round(x.dur/6000)/10}));
  const sum=[];for(const P of ALLPH)for(const cat of CATS){const aa=A.filter(x=>x.cat===cat&&phOf(x)===P.n);if(!aa.length){if(P.n>1)continue;sum.push({'Nível':'Fase '+P.n+' · '+LVN[cat],'Respostas':0,'% certo à 1.ª':'','Item':'(ainda não praticou)','Vezes':'','Erros':'','Confusões':''});continue;}
   const items=[...new Set(aa.map(x=>x.item))];
   for(const id of items){const xs=aa.filter(x=>x.item===id);const ok=xs.filter(x=>x.ok).length;const conf={};xs.forEach(x=>wrongList(x).forEach(w=>conf[w]=(conf[w]||0)+1));
