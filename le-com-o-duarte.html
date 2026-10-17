@@ -87,12 +87,77 @@
   .nota-num { font-size: .95rem !important; color: #6b6b80; margin: 0 0 14px !important; user-select: text; }
   .estrelas { font-size: 3rem; letter-spacing: 6px; min-height: 3.4rem; }
   .final p { font-size: 1.4rem; margin: 8px 0 16px; }
+
+  /* Relatório */
+  #zonaRel { text-align: center; padding: 0 16px 30px; }
+  .btn-rel { background: #fff; color: #e05070; font-size: 1.05rem; box-shadow: 0 4px 0 rgba(0,0,0,0.15); }
+  .rel h2 { font-size: 1.3rem; margin: 18px 0 8px; }
+  .rel .sub { color: #6b6b80; font-size: .95rem; margin: 4px 0 12px; }
+  .pinbox { width: 100%; font: inherit; font-size: 1.6rem; padding: 12px; border-radius: 14px; border: 3px solid #e3e3f0; text-align: center; letter-spacing: 8px; margin: 10px 0 14px; user-select: text; }
+  .rel select { font: inherit; font-size: 1rem; padding: 10px; border-radius: 12px; border: 2px solid #e3e3f0; width: 100%; background: #fff; }
+  .resumo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+  .resumo div { background: #f7f7ff; border-radius: 14px; padding: 10px 6px; text-align: center; }
+  .resumo b { display: block; font-size: 1.6rem; color: #8a7fff; }
+  .resumo span { font-size: .85rem; color: #6b6b80; }
+  .acoes { display: flex; gap: 10px; margin: 6px 0 4px; }
+  .acoes .btn { flex: 1; }
+  .btn-pdf { background: #ff4f7b; }
+  .btn-xls { background: #1e9c4c; }
+  details.leit { border: 2px solid #e3e3f0; border-radius: 14px; padding: 10px 12px; margin: 8px 0; text-align: left; }
+  details.leit summary { cursor: pointer; font-size: 1rem; }
+  details.leit summary small { color: #6b6b80; }
+  .resp { font-size: .95rem; margin: 8px 0 0; padding-top: 8px; border-top: 1px dashed #e3e3f0; }
+  .resp.x { color: #c02a52; }
+  .resp small { color: #6b6b80; }
+  #printArea { display: none; }
+  @media print {
+    body { background: #fff !important; }
+    body > *:not(#printArea) { display: none !important; }
+    #printArea { display: block !important; font-family: Arial, sans-serif; color: #000; font-size: 11pt; }
+    #printArea h1 { font-size: 16pt; margin: 0 0 4px; }
+    #printArea h2 { font-size: 12.5pt; margin: 16px 0 4px; page-break-after: avoid; }
+    #printArea table { width: 100%; border-collapse: collapse; margin: 4px 0 8px; page-break-inside: avoid; }
+    #printArea th, #printArea td { border: 1px solid #999; padding: 4px 6px; text-align: left; vertical-align: top; font-size: 10pt; }
+    #printArea th { background: #eee; }
+    #printArea .mut { color: #555; font-size: 9.5pt; }
+    #printArea .no { color: #b00020; font-weight: bold; }
+    #printArea .ok { color: #0a7a2f; font-weight: bold; }
+  }
 </style>
 </head>
 <body>
 <header><h1>📚 Lê com o Duarte</h1></header>
 
 <div id="menu"></div>
+<div id="zonaRel"><button class="btn btn-rel" onclick="abrirRel()">📊 O que o Duarte fez</button></div>
+
+<!-- RELATÓRIO (professor e família) -->
+<div class="ecra" id="relatorio">
+  <div class="barra"><button class="btn btn-voltar" onclick="voltar()">⬅ Voltar</button></div>
+  <div class="caixa rel">
+    <div id="relPin">
+      <h2>📊 O que o Duarte fez</h2>
+      <p class="sub">Esta parte é para o professor e para a família.</p>
+      <input id="pin" class="pinbox" type="password" inputmode="numeric" placeholder="PIN" onkeydown="if(event.key==='Enter')entrarRel()">
+      <button class="btn btn-pdf" style="width:100%" onclick="entrarRel()">Entrar</button>
+    </div>
+    <div id="relDados" style="display:none">
+      <h2>📊 O que o Duarte fez</h2>
+      <select id="fDias" onchange="desenharRel()">
+        <option value="7">Últimos 7 dias</option>
+        <option value="30" selected>Últimos 30 dias</option>
+        <option value="0">Tudo</option>
+      </select>
+      <div id="relConteudo"><p class="sub">A carregar…</p></div>
+      <div class="acoes">
+        <button class="btn btn-pdf" onclick="baixarPDF()">📄 PDF</button>
+        <button class="btn btn-xls" onclick="baixarExcel()">📊 Excel</button>
+      </div>
+      <p class="sub">No telemóvel, o PDF abre a janela de imprimir: escolhe «Guardar como PDF» ou partilha.</p>
+    </div>
+  </div>
+</div>
+<div id="printArea"></div>
 
 <!-- LEITURA -->
 <div class="ecra" id="leitura">
@@ -241,7 +306,8 @@ desenharMenu();
 
 function mostrar(id) {
   menu.style.display = id === 'menu' ? 'flex' : 'none';
-  ['leitura', 'perguntas', 'final'].forEach(e => document.getElementById(e).style.display = e === id ? 'block' : 'none');
+  document.getElementById('zonaRel').style.display = id === 'menu' ? 'block' : 'none';
+  ['leitura', 'perguntas', 'final', 'relatorio'].forEach(e => document.getElementById(e).style.display = e === id ? 'block' : 'none');
   window.scrollTo(0, 0);
 }
 
@@ -503,6 +569,95 @@ async function enviarPendentes() {
 window.addEventListener('fb-ready', enviarPendentes);
 window.addEventListener('online', enviarPendentes);
 
+// ---------- Relatório (professor e família) ----------
+const PIN = '1234';
+let REL = [];
+const escH = t => String(t == null ? '' : t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fData = d => new Date(d).toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const fHora = d => new Date(d).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+const fDur = x => x == null ? '' : Math.floor(x / 60) + ' min ' + String(x % 60).padStart(2, '0') + ' s';
+const estr = r => { const n = estrelasDe(r.certas, r.total); return '⭐'.repeat(n) + '☆'.repeat(3 - n); };
+const titulo = r => String(r.temaNome || '').replace(/^📖\s*/, '');
+
+function abrirRel() {
+  aLer = false; calar(); mostrar('relatorio');
+  document.getElementById('relPin').style.display = '';
+  document.getElementById('relDados').style.display = 'none';
+  document.getElementById('pin').value = '';
+}
+function entrarRel() {
+  if (document.getElementById('pin').value !== PIN) { alert('PIN errado'); return; }
+  document.getElementById('relPin').style.display = 'none';
+  document.getElementById('relDados').style.display = '';
+  carregarRel();
+}
+async function carregarRel() {
+  const out = document.getElementById('relConteudo');
+  out.innerHTML = '<p class="sub">A carregar…</p>';
+  let lista = [];
+  if (window.FB && window.FB.load) {
+    try { lista = await window.FB.load(); }
+    catch (e) { out.innerHTML = '<p class="sub">Não consegui ler os resultados (' + escH(e.code || e.message) + '). Verifica a internet.</p>'; return; }
+  } else if (!pendentes.length) {
+    out.innerHTML = '<p class="sub">Sem ligação. Verifica a internet e volta a entrar.</p>'; return;
+  }
+  REL = lista.filter(r => r.tema === 'leitura-duarte')
+    .concat(pendentes.map(r => ({ ...r, pendente: true })));
+  desenharRel();
+}
+function filtrados() {
+  const dias = +document.getElementById('fDias').value, lim = dias ? Date.now() - dias * 864e5 : 0;
+  return REL.filter(r => new Date(r.quando).getTime() >= lim).sort((a, b) => b.quando.localeCompare(a.quando));
+}
+function contas(R) {
+  const certas = R.reduce((a, r) => a + r.certas, 0), perg = R.reduce((a, r) => a + r.total, 0);
+  return { textos: R.length, dias: new Set(R.map(r => fData(r.quando))).size,
+    pct: perg ? Math.round(certas / perg * 100) : 0, seg: R.reduce((a, r) => a + (r.seg || 0), 0) };
+}
+function periodoTxt() { const o = document.getElementById('fDias'); return o.options[o.selectedIndex].text; }
+function desenharRel() {
+  const R = filtrados(), c = contas(R), out = document.getElementById('relConteudo');
+  if (!R.length) { out.innerHTML = '<p class="sub" style="margin-top:14px">Ainda não há textos lidos neste período.</p>'; return; }
+  let h = `<div class="resumo">
+    <div><b>${c.textos}</b><span>textos lidos</span></div>
+    <div><b>${c.dias}</b><span>dias de leitura</span></div>
+    <div><b>${c.pct}%</b><span>certas à primeira</span></div>
+    <div><b>${Math.round(c.seg / 60)}</b><span>minutos no total</span></div></div>`;
+  h += R.map(r => `<details class="leit"><summary><b>${escH(titulo(r))}</b> ${estr(r)}<br><small>${fData(r.quando)} às ${fHora(r.quando)} · ${r.certas}/${r.total} à primeira · ${fDur(r.seg)}${r.pendente ? ' · ainda não enviado' : ''}</small></summary>` +
+    (r.respostas || []).map(x => `<div class="resp ${x.ok ? '' : 'x'}">${x.ok ? '✔' : '✗'} ${x.n}. ${escH(x.p)}<br><small>Respondeu: ${escH(x.d)}${x.ok ? '' : ' · Certa: ' + escH(x.c)}</small></div>`).join('') + '</details>').join('');
+  out.innerHTML = h;
+}
+function baixarPDF() {
+  const R = filtrados().slice().reverse();
+  if (!R.length) { alert('Não há textos neste período.'); return; }
+  const c = contas(R);
+  let h = `<h1>Lê com o Duarte — relatório de leitura</h1>
+    <p class="mut">${escH(periodoTxt())} · gerado a ${fData(new Date())} às ${fHora(new Date())}</p>
+    <table><tr><th>Textos lidos</th><th>Dias de leitura</th><th>Certas à primeira</th><th>Tempo total</th></tr>
+    <tr><td>${c.textos}</td><td>${c.dias}</td><td>${c.pct}%</td><td>${fDur(c.seg)}</td></tr></table>`;
+  for (const r of R) {
+    h += `<h2>${fData(r.quando)} ${fHora(r.quando)} · ${escH(titulo(r))} · ${r.certas}/${r.total} à primeira ${estr(r)} · ${fDur(r.seg)}</h2>
+      <table><tr><th style="width:5%">N.º</th><th>Pergunta</th><th style="width:26%">Respondeu</th><th style="width:26%">Resposta certa</th><th style="width:5%"></th></tr>` +
+      (r.respostas || []).map(x => `<tr><td>${x.n}</td><td>${escH(x.p)}</td><td>${escH(x.d)}</td><td>${escH(x.c)}</td><td class="${x.ok ? 'ok' : 'no'}">${x.ok ? '✔' : '✗'}</td></tr>`).join('') + '</table>';
+  }
+  document.getElementById('printArea').innerHTML = h;
+  setTimeout(() => window.print(), 100);
+}
+function carregarScript(src) { return new Promise((ok, ko) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = ko; document.head.appendChild(e); }); }
+async function baixarExcel() {
+  const R = filtrados().slice().reverse();
+  if (!R.length) { alert('Não há textos neste período.'); return; }
+  try { if (!window.XLSX) await carregarScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'); }
+  catch (e) { alert('Não consegui abrir o Excel. Verifica a internet.'); return; }
+  const textosF = R.map(r => ({ Data: fData(r.quando), Hora: fHora(r.quando), Texto: titulo(r), 'Certas à primeira': r.certas, Perguntas: r.total, Estrelas: estrelasDe(r.certas, r.total), Tempo: fDur(r.seg) }));
+  const resp = []; R.forEach(r => (r.respostas || []).forEach(x => resp.push({ Data: fData(r.quando), Hora: fHora(r.quando), Texto: titulo(r), 'N.º': x.n, Pergunta: x.p, Respondeu: x.d, 'Resposta certa': x.c, 'Certo?': x.ok ? '✔' : '✗' })));
+  const wb = XLSX.utils.book_new(), add = (rows, nome, w) => { const ws = XLSX.utils.json_to_sheet(rows); ws['!cols'] = w.map(x => ({ wch: x })); XLSX.utils.book_append_sheet(wb, ws, nome); };
+  add(textosF, 'Textos', [11, 7, 24, 16, 10, 9, 12]);
+  add(resp, 'Respostas', [11, 7, 24, 5, 40, 40, 40, 7]);
+  XLSX.writeFile(wb, 'Leitura_Duarte_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+}
+
+
 function voltar() {
   aLer = false; calar();
   modoSilabas = false;
@@ -517,10 +672,13 @@ try{
   const V="10.12.2",B="https://www.gstatic.com/firebasejs/"+V+"/";
   const {initializeApp}=await import(B+"firebase-app.js");
   const {getAuth,signInAnonymously}=await import(B+"firebase-auth.js");
-  const {getFirestore,collection,addDoc,serverTimestamp}=await import(B+"firebase-firestore.js");
+  const {getFirestore,collection,addDoc,getDocs,serverTimestamp}=await import(B+"firebase-firestore.js");
   const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
   await signInAnonymously(auth);
-  window.FB={ save:r=>addDoc(collection(db,"tpc",r.aluno,"jogos"),{...r,ts:serverTimestamp()}) };
+  window.FB={
+    save:r=>addDoc(collection(db,"tpc",r.aluno,"jogos"),{...r,ts:serverTimestamp()}),
+    load:async()=>{const q=await getDocs(collection(db,"tpc","Duarte","jogos"));const out=[];q.forEach(d=>out.push({id:d.id,...d.data()}));return out}
+  };
   window.dispatchEvent(new Event("fb-ready"));
 }catch(e){console.warn("Firebase indisponível",e)}
 </script>
