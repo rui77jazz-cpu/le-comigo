@@ -106,7 +106,6 @@
     <div id="corpoTexto"></div>
   </div>
   <button class="btn btn-jali" onclick="comecarPerguntas()">Já li! 👉 Perguntas</button>
-  <a class="btn btn-whats" href="https://wa.me/351911196622" target="_blank" rel="noopener" onclick="this.href=linkWhats()">📲 Enviar ao professor</a>
 </div>
 
 <!-- PERGUNTAS -->
@@ -121,7 +120,6 @@
     <div id="zonaResposta"></div>
     <div class="feedback" id="feedback"></div>
   </div>
-  <a class="btn btn-whats" href="https://wa.me/351911196622" target="_blank" rel="noopener" onclick="this.href=linkWhats()">📲 Enviar ao professor</a>
 </div>
 
 <!-- FINAL -->
@@ -129,14 +127,12 @@
   <div class="caixa final">
     <div class="estrelas" id="estrelas"></div>
     <p id="msgFinal"></p>
-    <a class="btn btn-whats" href="https://wa.me/351911196622" target="_blank" rel="noopener" onclick="this.href=linkWhats()">📲 Enviar ao professor</a>
-    <p class="nota-num">WhatsApp do professor: 911 196 622</p>
+    <p class="nota-num" id="saveSt"></p>
     <button class="btn btn-voltar" onclick="voltar()">⬅ Escolher outro texto</button>
   </div>
 </div>
 
 <script>
-const NUMERO_PROFESSOR = "351911196622";
 
 // Tipos de pergunta: "escolha" (a 1.ª opção é a certa), "vf" (verdadeiro/falso), "ordem" (frases pela ordem certa)
 const textos = [
@@ -273,7 +269,7 @@ function abrirTexto(i) {
   idxTexto = i; textoAtual = textos[i];
   acertos = 0; respondidas = 0;
   const d = new Date();
-  atual = { i, hora: String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'), respondidas: 0, acertos: 0 };
+  atual = { i, inicio: Date.now(), hora: String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'), respondidas: 0, acertos: 0 };
   tentativas.push(atual);
   document.getElementById('tituloTexto').textContent = textoAtual.emoji + ' ' + textoAtual.titulo;
   construirTexto();
@@ -355,7 +351,7 @@ function perguntaAtual() { return textoAtual.perguntas[qIdx]; }
 
 function comecarPerguntas() {
   aLer = false; calar();
-  qIdx = 0; acertos = 0; respondidas = 0;
+  qIdx = 0; acertos = 0; respondidas = 0; respostasLog = [];
   if (atual) { atual.respondidas = 0; atual.acertos = 0; }
   mostrar('perguntas');
   mostrarPergunta();
@@ -368,7 +364,7 @@ function feedback(txt, bom) {
 }
 
 function mostrarPergunta() {
-  errouEsta = false;
+  errouEsta = false; primeiraResposta = null;
   const q = perguntaAtual();
   const nomes = { escolha: '🔵 Escolhe a resposta certa', vf: '✅ Verdadeiro ou falso?', ordem: '🔢 Ordena a história' };
   document.getElementById('progresso').textContent = `Pergunta ${qIdx + 1} de ${textoAtual.perguntas.length}`;
@@ -383,12 +379,16 @@ function mostrarPergunta() {
 }
 
 function errou(btn) {
+  if (!errouEsta) primeiraResposta = btn.textContent;
   errouEsta = true;
   btn.classList.remove('errada'); void btn.offsetWidth; btn.classList.add('errada');
   feedback('Ainda não. Lê outra vez! 👀', false);
 }
 
 function acertou() {
+  const q = perguntaAtual();
+  const certa = q.tipo === 'escolha' ? q.o[0] : q.tipo === 'vf' ? (q.certo ? 'Verdadeiro' : 'Falso') : q.o.join(' → ');
+  respostasLog.push({ n: qIdx + 1, p: q.p, d: errouEsta ? (q.tipo === 'ordem' ? 'Escolheu primeiro: ' : '') + primeiraResposta : certa, c: certa, ok: !errouEsta });
   respondidas++;
   if (!errouEsta) acertos++;
   if (atual) { atual.respondidas = respondidas; atual.acertos = acertos; }
@@ -467,31 +467,41 @@ function mostrarFinal() {
   for (let k = 0; k < 3; k++) setTimeout(() => { e.textContent += k < n ? '⭐' : '☆'; }, k * 400);
   const msgs = ['Vamos ler outra vez, Duarte!', 'Boa, Duarte! Continua a treinar!', 'Muito bem, Duarte!', 'Fantástico, Duarte! Acertaste tudo!'];
   document.getElementById('msgFinal').textContent = `${msgs[n]} Acertaste ${acertos} de ${total} à primeira.`;
+  registar(total);
 }
 
-function linkWhats() {
-  let msg = 'Olá professor! Sou o Duarte 😊\n';
-  if (!tentativas.length) {
-    msg += 'Abri a app mas ainda não li nenhum texto.';
-  } else {
-    msg += tentativas.length === 1 ? 'Hoje fiz 1 texto:\n' : `Hoje fiz ${tentativas.length} textos:\n`;
-    let totalCertas = 0, totalResp = 0;
-    tentativas.forEach((t, k) => {
-      const tx = textos[t.i], total = tx.perguntas.length;
-      totalCertas += t.acertos; totalResp += t.respondidas;
-      let linha = `\n${k + 1}. ${tx.emoji} ${tx.titulo} (${t.hora})\n   `;
-      if (t.respondidas === 0) linha += 'Li o texto, ainda sem perguntas.';
-      else if (t.respondidas < total) linha += `Respondi a ${t.respondidas} de ${total} e acertei ${t.acertos} à primeira.`;
-      else {
-        const n = estrelasDe(t.acertos, total);
-        linha += `Respondi a todas e acertei ${t.acertos} de ${total} à primeira ${'⭐'.repeat(n)}${'☆'.repeat(3 - n)}`;
-      }
-      msg += linha;
-    });
-    if (tentativas.length > 1) msg += `\n\nTotal: ${totalResp} perguntas respondidas, ${totalCertas} certas à primeira.`;
-  }
-  return `https://wa.me/${NUMERO_PROFESSOR}?text=${encodeURIComponent(msg)}`;
+// ---------- Guardar no Firebase (projeto leitura-1m, junto com o TPC) ----------
+let respostasLog = [], primeiraResposta = null;
+const CHAVE = 'le-com-o-duarte-pendentes';
+function lerPend() { try { return JSON.parse(localStorage.getItem(CHAVE)) || []; } catch (e) { return []; } }
+function gravarPend(l) { try { localStorage.setItem(CHAVE, JSON.stringify(l)); } catch (e) {} }
+let pendentes = lerPend();
+function setSave(t) { const e = document.getElementById('saveSt'); if (e) e.textContent = t; }
+function registar(total) {
+  const inicio = atual && atual.inicio ? atual.inicio : Date.now();
+  pendentes.push({
+    aluno: 'Duarte', app: 'Lê com o Duarte', tema: 'leitura-duarte',
+    temaNome: '📖 ' + textoAtual.titulo, certas: acertos, total,
+    quando: new Date().toISOString(), inicio: new Date(inicio).toISOString(),
+    seg: Math.round((Date.now() - inicio) / 1000), respostas: respostasLog.slice()
+  });
+  gravarPend(pendentes);
+  setSave('⏳ A guardar…');
+  enviarPendentes();
 }
+let aEnviar = false;
+async function enviarPendentes() {
+  if (aEnviar || !pendentes.length) return;
+  if (!window.FB) { setSave('💾 Ficou guardado. Segue para o professor quando houver internet.'); return; }
+  aEnviar = true;
+  try {
+    while (pendentes.length) { await window.FB.save(pendentes[0]); pendentes.shift(); gravarPend(pendentes); }
+    setSave('✅ O professor já recebeu o teu resultado!');
+  } catch (e) { setSave('💾 Ficou guardado. Segue para o professor quando houver internet.'); }
+  aEnviar = false;
+}
+window.addEventListener('fb-ready', enviarPendentes);
+window.addEventListener('online', enviarPendentes);
 
 function voltar() {
   aLer = false; calar();
@@ -500,6 +510,19 @@ function voltar() {
   desenharMenu();
   mostrar('menu');
 }
+</script>
+<script type="module">
+const cfg={apiKey:"AIzaSyAJdVLPoQnyq-Iu4rgP1HIYnCpArVYOc9Y",authDomain:"leitura-1m.firebaseapp.com",projectId:"leitura-1m",storageBucket:"leitura-1m.firebasestorage.app",messagingSenderId:"126861655472",appId:"1:126861655472:web:c966850e473f3d8650aa75"};
+try{
+  const V="10.12.2",B="https://www.gstatic.com/firebasejs/"+V+"/";
+  const {initializeApp}=await import(B+"firebase-app.js");
+  const {getAuth,signInAnonymously}=await import(B+"firebase-auth.js");
+  const {getFirestore,collection,addDoc,serverTimestamp}=await import(B+"firebase-firestore.js");
+  const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app);
+  await signInAnonymously(auth);
+  window.FB={ save:r=>addDoc(collection(db,"tpc",r.aluno,"jogos"),{...r,ts:serverTimestamp()}) };
+  window.dispatchEvent(new Event("fb-ready"));
+}catch(e){console.warn("Firebase indisponível",e)}
 </script>
 
 </body>
